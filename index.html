@@ -12,54 +12,60 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f9fafb;
-            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8fafc;
+            padding: 1rem;
             line-height: 1.6;
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
         .card {
             background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
         }
 
         .header {
-            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .header h1 {
             font-size: 1.875rem;
             font-weight: bold;
             color: #1f2937;
-            margin-bottom: 1rem;
         }
 
         .button-group {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
             align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .btn {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1rem;
             border: none;
-            border-radius: 0.5rem;
+            border-radius: 8px;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-size: 0.875rem;
         }
 
         .btn-start {
@@ -72,12 +78,12 @@
         }
 
         .btn-pause {
-            background-color: #ef4444;
+            background-color: #f59e0b;
             color: white;
         }
 
         .btn-pause:hover {
-            background-color: #dc2626;
+            background-color: #d97706;
         }
 
         .btn-reset {
@@ -98,8 +104,36 @@
             background-color: #2563eb;
         }
 
+        .btn-speed {
+            background-color: #8b5cf6;
+            color: white;
+        }
+
+        .btn-speed:hover {
+            background-color: #7c3aed;
+        }
+
+        .time-display {
+            font-weight: 500;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .speed-display {
+            font-weight: 500;
+            color: #7c3aed;
+            white-space: nowrap;
+        }
+
+        .eta-display {
+            font-weight: 500;
+            color: #059669;
+            white-space: nowrap;
+        }
+
         .config-panel {
             display: none;
+            margin-top: 1rem;
         }
 
         .config-panel.show {
@@ -112,41 +146,48 @@
             gap: 1rem;
         }
 
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
         .config-item label {
-            display: block;
-            font-size: 0.875rem;
             font-weight: 500;
             color: #374151;
-            margin-bottom: 0.5rem;
         }
 
         .config-item input {
-            width: 100%;
             padding: 0.5rem;
             border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
+            border-radius: 6px;
             font-size: 0.875rem;
+        }
+
+        .config-item input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .progress-bar {
             width: 100%;
             height: 1rem;
             background-color: #e5e7eb;
-            border-radius: 9999px;
+            border-radius: 0.5rem;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background-color: #10b981;
+            background: linear-gradient(90deg, #10b981, #059669);
             transition: width 0.3s ease;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 1rem;
-            margin-top: 1rem;
         }
 
         .stat-item {
@@ -156,6 +197,7 @@
         .stat-number {
             font-size: 1.5rem;
             font-weight: bold;
+            margin-bottom: 0.25rem;
         }
 
         .stat-label {
@@ -163,31 +205,70 @@
             color: #6b7280;
         }
 
+        .text-blue-600 { color: #2563eb; }
+        .text-yellow-600 { color: #d97706; }
+        .text-green-600 { color: #059669; }
+        .text-purple-600 { color: #7c3aed; }
+        .text-red-600 { color: #dc2626; }
+
+        .production-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
         .worker-station {
-            background: white;
-            border-radius: 0.5rem;
+            background: #f9fafb;
+            border: 2px solid;
+            border-radius: 8px;
             padding: 1rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .border-blue-500 { border-color: #3b82f6; }
+        .border-yellow-500 { border-color: #eab308; }
+        .border-green-500 { border-color: #22c55e; }
+        .border-purple-500 { border-color: #8b5cf6; }
+
+        .queue-display {
+            background: #f3f4f6;
+            border: 2px dashed;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .border-blue-300 { border-color: #93c5fd; }
+        .border-green-300 { border-color: #86efac; }
+
+        .queue-count {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #374151;
+            margin-top: 0.5rem;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: #6b7280;
+            font-weight: bold;
         }
 
         .worker-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 0.5rem;
-            margin-top: 0.5rem;
         }
 
         .worker-status {
             padding: 0.5rem;
-            border-radius: 0.25rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
             text-align: center;
-            font-size: 0.875rem;
-        }
-
-        .worker-busy {
-            background-color: #fecaca;
-            color: #991b1b;
         }
 
         .worker-free {
@@ -195,73 +276,53 @@
             color: #065f46;
         }
 
-        .queue-display {
-            background: white;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid;
-            text-align: center;
-        }
-
-        .queue-count {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #374151;
-        }
-
-        .production-flow {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .flow-arrow {
-            font-size: 1.5rem;
-            color: #6b7280;
+        .worker-busy {
+            background-color: #fee2e2;
+            color: #991b1b;
         }
 
         .parallel-lines {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
             margin: 1rem 0;
         }
 
         .line-container {
-            background-color: #f9fafb;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
             padding: 1rem;
-            border-radius: 0.5rem;
         }
 
         .line-title {
             font-weight: 600;
+            color: #1e293b;
             text-align: center;
             margin-bottom: 1rem;
-            color: #374151;
         }
 
         .line-station {
             background: white;
-            border-radius: 0.25rem;
+            border: 2px solid;
+            border-radius: 6px;
             padding: 0.75rem;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .station-name {
-            font-size: 0.875rem;
             font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            text-align: center;
         }
 
         .station-status {
+            padding: 0.5rem;
+            border-radius: 4px;
             font-size: 0.75rem;
-            margin-top: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
+            font-weight: 500;
+            text-align: center;
         }
 
         .table {
@@ -272,39 +333,40 @@
 
         .table th,
         .table td {
-            text-align: left;
             padding: 0.75rem;
+            text-align: left;
             border-bottom: 1px solid #e5e7eb;
         }
 
         .table th {
             background-color: #f9fafb;
-            font-weight: 500;
+            font-weight: 600;
+            color: #374151;
         }
 
-        .hidden {
-            display: none;
+        .table tbody tr:hover {
+            background-color: #f9fafb;
         }
-
-        .text-blue-600 { color: #2563eb; }
-        .text-yellow-600 { color: #d97706; }
-        .text-green-600 { color: #059669; }
-        .text-purple-600 { color: #9333ea; }
-        .text-red-600 { color: #dc2626; }
-
-        .border-blue-500 { border-left-color: #3b82f6; }
-        .border-yellow-500 { border-left-color: #eab308; }
-        .border-green-500 { border-left-color: #10b981; }
-        .border-purple-500 { border-left-color: #8b5cf6; }
-        .border-blue-300 { border-left-color: #93c5fd; }
-        .border-green-300 { border-left-color: #86efac; }
 
         @media (max-width: 768px) {
-            .production-flow {
+            .header {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
+
+            .button-group {
+                justify-content: center;
+            }
+
+            .production-flow {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
             .parallel-lines {
                 grid-template-columns: 1fr;
             }
@@ -324,6 +386,11 @@
                         <span id="playPauseText">Bắt đầu</span>
                     </button>
                     
+                    <button id="speedBtn" class="btn btn-speed">
+                        <span>⚡</span>
+                        <span id="speedText">1x</span>
+                    </button>
+                    
                     <button id="resetBtn" class="btn btn-reset">
                         <span>↻</span>
                         Reset
@@ -336,6 +403,14 @@
                     
                     <div class="time-display">
                         Thời gian: <span id="currentTime">00:00:00</span>
+                    </div>
+                    
+                    <div class="speed-display">
+                        Tốc độ: <span id="currentSpeed">1x</span>
+                    </div>
+                    
+                    <div class="eta-display">
+                        Dự kiến hoàn thành: <span id="etaTime">--:--:--</span>
                     </div>
                 </div>
             </div>
@@ -528,6 +603,9 @@
         let showConfig = false;
         let currentTime = 0;
         let intervalId = null;
+        let speedMultiplier = 1; // Tốc độ mô phỏng
+        let speedOptions = [1, 2, 5, 10, 20]; // Các tùy chọn tốc độ
+        let currentSpeedIndex = 0;
 
         let stats = {
             completed: 0,
@@ -543,6 +621,7 @@
             afterVegetables: []
         };
 
+        // Khởi tạo đúng số worker ban đầu: 2 cắt, 4 quét bơ, 2 bỏ rau, 2 đóng gói (bỏ rau sẽ tăng khi chuyển người)
         let workers = {
             cutters: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }],
             butterWorkers: [
@@ -563,6 +642,8 @@
         const resetBtn = document.getElementById('resetBtn');
         const configBtn = document.getElementById('configBtn');
         const configPanel = document.getElementById('configPanel');
+        const speedBtn = document.getElementById('speedBtn');
+        const speedText = document.getElementById('speedText');
 
         // Initialize the application
         function init() {
@@ -576,6 +657,7 @@
             playPauseBtn.addEventListener('click', toggleSimulation);
             resetBtn.addEventListener('click', resetSimulation);
             configBtn.addEventListener('click', toggleConfig);
+            speedBtn.addEventListener('click', changeSpeed);
 
             // Config inputs
             document.getElementById('totalBreads').addEventListener('change', updateConfig);
@@ -583,6 +665,19 @@
             document.getElementById('butterTime').addEventListener('change', updateConfig);
             document.getElementById('vegetableTime').addEventListener('change', updateConfig);
             document.getElementById('packTime').addEventListener('change', updateConfig);
+        }
+
+        function changeSpeed() {
+            currentSpeedIndex = (currentSpeedIndex + 1) % speedOptions.length;
+            speedMultiplier = speedOptions[currentSpeedIndex];
+            speedText.textContent = speedMultiplier + 'x';
+            document.getElementById('currentSpeed').textContent = speedMultiplier + 'x';
+            
+            // Restart interval với tốc độ mới nếu đang chạy
+            if (isRunning) {
+                stopSimulation();
+                startSimulation();
+            }
         }
 
         function updateConfig() {
@@ -625,9 +720,14 @@
 
         function startSimulation() {
             intervalId = setInterval(() => {
-                currentTime++;
-                updateWorkers();
-                startNewTasks();
+                currentTime += speedMultiplier;
+                
+                // Cập nhật workers theo tốc độ
+                for (let i = 0; i < speedMultiplier; i++) {
+                    updateWorkers();
+                    startNewTasks();
+                }
+                
                 updateUI();
             }, 1000);
         }
@@ -698,11 +798,32 @@
                     stats.cutting.completed++;
                     stats.cutting.inProgress--;
                     queues.afterCut.push({ id: Date.now() + Math.random() });
+                    // Khi cắt xong toàn bộ, chuyển 1 người sang phết bơ, 1 người sang bỏ rau
+                    if (
+                        stats.cutting.completed === config.totalBreads &&
+                        workers.cutters.length > 0
+                    ) {
+                        workers.butterWorkers.push({ busy: false, timeLeft: 0 });    // +1 phết bơ
+                        workers.vegetableWorkers.push({ busy: false, timeLeft: 0 }); // +1 bỏ rau
+                        workers.cutters = [];
+                        initializeWorkerDisplays();
+                    }
                     break;
                 case 'butterWorkers':
                     stats.buttering.completed++;
                     stats.buttering.inProgress--;
                     queues.afterButter.push({ id: Date.now() + Math.random() });
+                    // Khi phết bơ xong toàn bộ, chuyển toàn bộ người phết bơ sang bỏ rau
+                    if (
+                        stats.buttering.completed === config.totalBreads &&
+                        workers.butterWorkers.length > 0
+                    ) {
+                        workers.butterWorkers.forEach(() => {
+                            workers.vegetableWorkers.push({ busy: false, timeLeft: 0 });
+                        });
+                        workers.butterWorkers = [];
+                        initializeWorkerDisplays();
+                    }
                     break;
                 case 'vegetableWorkers':
                     stats.vegetables.completed++;
@@ -766,6 +887,43 @@
             }
         }
 
+        function calculateETA() {
+            if (stats.completed === 0 && currentTime === 0) {
+                return "Chưa bắt đầu";
+            }
+
+            if (stats.completed >= config.totalBreads) {
+                return "Đã hoàn thành";
+            }
+
+            // Tính tốc độ sản xuất hiện tại (bánh/giây)
+            let currentRate = 0;
+            if (currentTime > 0) {
+                currentRate = stats.completed / currentTime;
+            }
+
+            // Nếu tốc độ = 0, tính dựa trên năng suất lý thuyết
+            if (currentRate === 0) {
+                // Tìm bottleneck (công đoạn chậm nhất)
+                const cutRate = 2 / config.cutTime; // 2 người cắt
+                const butterRate = 4 / config.butterTime; // 4 người quét bơ
+                const vegetableRate = 4 / config.vegetableTime; // 4 người bỏ rau
+                const packRate = 2 / config.packTime; // 2 người đóng gói
+
+                currentRate = Math.min(cutRate, butterRate, vegetableRate, packRate);
+            }
+
+            if (currentRate <= 0) {
+                return "Không thể tính";
+            }
+
+            const remainingBreads = config.totalBreads - stats.completed;
+            const estimatedTimeRemaining = remainingBreads / currentRate;
+            const totalEstimatedTime = currentTime + estimatedTimeRemaining;
+
+            return formatTime(Math.ceil(totalEstimatedTime));
+        }
+
         function formatTime(seconds) {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
@@ -774,7 +932,7 @@
         }
 
         function initializeWorkerDisplays() {
-            // Initialize cutter workers
+            // Cutter workers
             const cutterContainer = document.getElementById('cutterWorkers');
             cutterContainer.innerHTML = '';
             workers.cutters.forEach((worker, index) => {
@@ -785,7 +943,7 @@
                 cutterContainer.appendChild(workerDiv);
             });
 
-            // Initialize packer workers
+            // Packer workers (luôn 2)
             const packerContainer = document.getElementById('packerWorkers');
             packerContainer.innerHTML = '';
             workers.packers.forEach((worker, index) => {
@@ -796,22 +954,29 @@
                 packerContainer.appendChild(workerDiv);
             });
 
-            // Initialize parallel lines
+            // Parallel lines (butter & vegetable)
             const parallelContainer = document.getElementById('parallelLines');
             parallelContainer.innerHTML = '';
-            for (let i = 0; i < 4; i++) {
+            const maxLines = Math.max(workers.butterWorkers.length, workers.vegetableWorkers.length, 4);
+            for (let i = 0; i < maxLines; i++) {
+                const butterStatus = workers.butterWorkers[i]
+                    ? `<div class="station-status worker-free" id="butter-${i}">Rảnh</div>`
+                    : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
+                const vegStatus = workers.vegetableWorkers[i]
+                    ? `<div class="station-status worker-free" id="vegetable-${i}">Rảnh</div>`
+                    : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
                 const lineDiv = document.createElement('div');
                 lineDiv.className = 'line-container';
                 lineDiv.innerHTML = `
                     <div class="line-title">Dây chuyền ${i + 1}</div>
                     <div class="line-station border-yellow-500">
                         <div class="station-name">Quét bơ</div>
-                        <div class="station-status worker-free" id="butter-${i}">Rảnh</div>
+                        ${butterStatus}
                     </div>
                     <div style="text-align: center; font-size: 0.875rem; margin: 0.5rem 0;">↓</div>
                     <div class="line-station border-green-500">
                         <div class="station-name">Bỏ rau</div>
-                        <div class="station-status worker-free" id="vegetable-${i}">Rảnh</div>
+                        ${vegStatus}
                     </div>
                 `;
                 parallelContainer.appendChild(lineDiv);
@@ -821,6 +986,9 @@
         function updateUI() {
             // Update time
             document.getElementById('currentTime').textContent = formatTime(currentTime);
+
+            // Update ETA
+            document.getElementById('etaTime').textContent = calculateETA();
 
             // Update config displays
             document.getElementById('cutTimeDisplay').textContent = config.cutTime;
@@ -852,6 +1020,11 @@
 
             // Update statistics table
             updateStatisticsTable();
+
+            // Tự động dừng khi hoàn thành
+            if (stats.completed >= config.totalBreads && isRunning) {
+                toggleSimulation();
+            }
         }
 
         function updateWorkerStatus(prefix, workerList) {
