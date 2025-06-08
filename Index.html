@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Hình Dây Chuyền Sản Xuất Bánh Mì</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header {
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-start {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background-color: #059669;
+        }
+
+        .btn-pause {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-pause:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-reset {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #4b5563;
+        }
+
+        .btn-config {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-config:hover {
+            background-color: #2563eb;
+        }
+
+        .config-panel {
+            display: none;
+        }
+
+        .config-panel.show {
+            display: block;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .config-item label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .config-item input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 1rem;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .worker-station {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+
+        .worker-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .worker-status {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .worker-busy {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .worker-free {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .queue-display {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            text-align: center;
+        }
+
+        .queue-count {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .production-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: #6b7280;
+        }
+
+        .parallel-lines {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .line-container {
+            background-color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .line-title {
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .line-station {
+            background: white;
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid;
+            margin-bottom: 0.75rem;
+        }
+
+        .station-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .station-status {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .text-blue-600 { color: #2563eb; }
+        .text-yellow-600 { color: #d97706; }
+        .text-green-600 { color: #059669; }
+        .text-purple-600 { color: #9333ea; }
+        .text-red-600 { color: #dc2626; }
+
+        .border-blue-500 { border-left-color: #3b82f6; }
+        .border-yellow-500 { border-left-color: #eab308; }
+        .border-green-500 { border-left-color: #10b981; }
+        .border-purple-500 { border-left-color: #8b5cf6; }
+        .border-blue-300 { border-left-color: #93c5fd; }
+        .border-green-300 { border-left-color: #86efac; }
+
+        @media (max-width: 768px) {
+            .production-flow {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .parallel-lines {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card">
+            <div class="header">
+                <h1>Mô Hình Dây Chuyền Sản Xuất Bánh Mì</h1>
+                
+                <div class="button-group">
+                    <button id="playPauseBtn" class="btn btn-start">
+                        <span id="playPauseIcon">▶</span>
+                        <span id="playPauseText">Bắt đầu</span>
+                    </button>
+                    
+                    <button id="resetBtn" class="btn btn-reset">
+                        <span>↻</span>
+                        Reset
+                    </button>
+                    
+                    <button id="configBtn" class="btn btn-config">
+                        <span>⚙</span>
+                        Cấu hình
+                    </button>
+                    
+                    <div class="time-display">
+                        Thời gian: <span id="currentTime">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Panel -->
+        <div id="configPanel" class="card config-panel">
+            <h2 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: bold;">Cấu hình dây chuyền</h2>
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Tổng số bánh mì</label>
+                    <input type="number" id="totalBreads" value="4500">
+                </div>
+                <div class="config-item">
+                    <label>Thời gian cắt bánh (s)</label>
+                    <input type="number" id="cutTime" value="5">
+                </div>
+                <div class="config-item">
+                    <label>Thời gian quét bơ (s)</label>
+                    <input type="number" id="butterTime" value="15">
+                </div>
+                <div class="config-item">
+                    <label>Thời gian bỏ rau (s)</label>
+                    <input type="number" id="vegetableTime" value="20">
+                </div>
+                <div class="config-item">
+                    <label>Thời gian đóng gói (s)</label>
+                    <input type="number" id="packTime" value="5">
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="card">
+            <h2 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: bold;">Tiến độ tổng thể</h2>
+            <div style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">
+                    <span>Hoàn thành: <span id="completedCount">0</span>/<span id="totalCount">4500</span></span>
+                    <span id="completionPercentage">0.0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number text-blue-600" id="cutCompleted">0</div>
+                    <div class="stat-label">Đã cắt</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number text-yellow-600" id="butterCompleted">0</div>
+                    <div class="stat-label">Đã quét bơ</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number text-green-600" id="vegetableCompleted">0</div>
+                    <div class="stat-label">Đã bỏ rau</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number text-purple-600" id="packCompleted">0</div>
+                    <div class="stat-label">Đã đóng gói</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Production Line Diagram -->
+        <div class="card">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: bold;">Sơ đồ dây chuyền sản xuất</h2>
+            
+            <!-- Cutting Station -->
+            <div class="production-flow">
+                <div class="worker-station border-blue-500">
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Cắt bánh (2 người)</h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="cutTimeDisplay">5</span>s</div>
+                    <div class="worker-grid" id="cutterWorkers">
+                        <!-- Workers will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="queue-display border-blue-300">
+                    <h4 style="font-weight: 500; color: #1f2937;">Hàng đợi quét bơ</h4>
+                    <div class="queue-count" id="afterCutQueue">0</div>
+                </div>
+            </div>
+
+            <!-- Parallel Processing Indicator -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                <div class="flow-arrow">↓</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Phân chia cho 4 dây chuyền song song</div>
+            </div>
+
+            <!-- Parallel Lines -->
+            <div class="parallel-lines" id="parallelLines">
+                <!-- Lines will be populated by JavaScript -->
+            </div>
+
+            <!-- Convergence -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+                <div class="flow-arrow">↓</div>
+                <div style="font-size: 0.875rem; color: #6b7280;">Tập hợp từ 4 dây chuyền</div>
+            </div>
+
+            <!-- Packing Station -->
+            <div class="production-flow" style="justify-content: center;">
+                <div class="queue-display border-green-300">
+                    <h4 style="font-weight: 500; color: #1f2937;">Hàng đợi đóng gói</h4>
+                    <div class="queue-count" id="afterVegetableQueue">0</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="worker-station border-purple-500">
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Đóng gói (2 người)</h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="packTimeDisplay">5</span>s</div>
+                    <div class="worker-grid" id="packerWorkers">
+                        <!-- Workers will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="worker-station border-green-500">
+                    <h3 style="font-weight: 600; color: #1f2937;">Hoàn thành</h3>
+                    <div style="font-size: 1.875rem; font-weight: bold; color: #059669;" id="finalCompleted">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Table -->
+        <div class="card">
+            <h2 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: bold;">Thống kê chi tiết</h2>
+            <div style="overflow-x: auto;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Công đoạn</th>
+                            <th>Số người</th>
+                            <th>Thời gian (s)</th>
+                            <th>Đã hoàn thành</th>
+                            <th>Đang làm</th>
+                            <th>Hiệu suất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cắt bánh</td>
+                            <td>2</td>
+                            <td id="cutTimeTable">5</td>
+                            <td id="cutCompletedTable">0</td>
+                            <td class="text-red-600" id="cutInProgressTable">0</td>
+                            <td id="cutEfficiencyTable">0 bánh/phút</td>
+                        </tr>
+                        <tr>
+                            <td>Quét bơ</td>
+                            <td>4</td>
+                            <td id="butterTimeTable">15</td>
+                            <td id="butterCompletedTable">0</td>
+                            <td class="text-red-600" id="butterInProgressTable">0</td>
+                            <td id="butterEfficiencyTable">0 bánh/phút</td>
+                        </tr>
+                        <tr>
+                            <td>Bỏ rau</td>
+                            <td>4</td>
+                            <td id="vegetableTimeTable">20</td>
+                            <td id="vegetableCompletedTable">0</td>
+                            <td class="text-red-600" id="vegetableInProgressTable">0</td>
+                            <td id="vegetableEfficiencyTable">0 bánh/phút</td>
+                        </tr>
+                        <tr>
+                            <td>Đóng gói</td>
+                            <td>2</td>
+                            <td id="packTimeTable">5</td>
+                            <td id="packCompletedTable">0</td>
+                            <td class="text-red-600" id="packInProgressTable">0</td>
+                            <td id="packEfficiencyTable">0 bánh/phút</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let config = {
+            totalBreads: 4500,
+            cutTime: 5,
+            butterTime: 15,
+            vegetableTime: 20,
+            packTime: 5
+        };
+
+        let isRunning = false;
+        let showConfig = false;
+        let currentTime = 0;
+        let intervalId = null;
+
+        let stats = {
+            completed: 0,
+            cutting: { completed: 0, inProgress: 0 },
+            buttering: { completed: 0, inProgress: 0 },
+            vegetables: { completed: 0, inProgress: 0 },
+            packing: { completed: 0, inProgress: 0 }
+        };
+
+        let queues = {
+            afterCut: [],
+            afterButter: [],
+            afterVegetables: []
+        };
+
+        let workers = {
+            cutters: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }],
+            butterWorkers: [
+                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
+                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
+            ],
+            vegetableWorkers: [
+                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
+                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
+            ],
+            packers: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }]
+        };
+
+        // DOM elements
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playPauseIcon = document.getElementById('playPauseIcon');
+        const playPauseText = document.getElementById('playPauseText');
+        const resetBtn = document.getElementById('resetBtn');
+        const configBtn = document.getElementById('configBtn');
+        const configPanel = document.getElementById('configPanel');
+
+        // Initialize the application
+        function init() {
+            setupEventListeners();
+            updateConfigInputs();
+            initializeWorkerDisplays();
+            updateUI();
+        }
+
+        function setupEventListeners() {
+            playPauseBtn.addEventListener('click', toggleSimulation);
+            resetBtn.addEventListener('click', resetSimulation);
+            configBtn.addEventListener('click', toggleConfig);
+
+            // Config inputs
+            document.getElementById('totalBreads').addEventListener('change', updateConfig);
+            document.getElementById('cutTime').addEventListener('change', updateConfig);
+            document.getElementById('butterTime').addEventListener('change', updateConfig);
+            document.getElementById('vegetableTime').addEventListener('change', updateConfig);
+            document.getElementById('packTime').addEventListener('change', updateConfig);
+        }
+
+        function updateConfig() {
+            config.totalBreads = parseInt(document.getElementById('totalBreads').value) || 0;
+            config.cutTime = parseInt(document.getElementById('cutTime').value) || 0;
+            config.butterTime = parseInt(document.getElementById('butterTime').value) || 0;
+            config.vegetableTime = parseInt(document.getElementById('vegetableTime').value) || 0;
+            config.packTime = parseInt(document.getElementById('packTime').value) || 0;
+            updateUI();
+        }
+
+        function updateConfigInputs() {
+            document.getElementById('totalBreads').value = config.totalBreads;
+            document.getElementById('cutTime').value = config.cutTime;
+            document.getElementById('butterTime').value = config.butterTime;
+            document.getElementById('vegetableTime').value = config.vegetableTime;
+            document.getElementById('packTime').value = config.packTime;
+        }
+
+        function toggleConfig() {
+            showConfig = !showConfig;
+            configPanel.classList.toggle('show', showConfig);
+        }
+
+        function toggleSimulation() {
+            isRunning = !isRunning;
+            
+            if (isRunning) {
+                playPauseBtn.className = 'btn btn-pause';
+                playPauseIcon.textContent = '⏸';
+                playPauseText.textContent = 'Tạm dừng';
+                startSimulation();
+            } else {
+                playPauseBtn.className = 'btn btn-start';
+                playPauseIcon.textContent = '▶';
+                playPauseText.textContent = 'Bắt đầu';
+                stopSimulation();
+            }
+        }
+
+        function startSimulation() {
+            intervalId = setInterval(() => {
+                currentTime++;
+                updateWorkers();
+                startNewTasks();
+                updateUI();
+            }, 1000);
+        }
+
+        function stopSimulation() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function resetSimulation() {
+            stopSimulation();
+            isRunning = false;
+            currentTime = 0;
+
+            stats = {
+                completed: 0,
+                cutting: { completed: 0, inProgress: 0 },
+                buttering: { completed: 0, inProgress: 0 },
+                vegetables: { completed: 0, inProgress: 0 },
+                packing: { completed: 0, inProgress: 0 }
+            };
+
+            queues = {
+                afterCut: [],
+                afterButter: [],
+                afterVegetables: []
+            };
+
+            workers = {
+                cutters: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }],
+                butterWorkers: [
+                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
+                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
+                ],
+                vegetableWorkers: [
+                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
+                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
+                ],
+                packers: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }]
+            };
+
+            playPauseBtn.className = 'btn btn-start';
+            playPauseIcon.textContent = '▶';
+            playPauseText.textContent = 'Bắt đầu';
+
+            updateUI();
+        }
+
+        function updateWorkers() {
+            ['cutters', 'butterWorkers', 'vegetableWorkers', 'packers'].forEach(workerType => {
+                workers[workerType].forEach((worker, index) => {
+                    if (worker.busy && worker.timeLeft > 0) {
+                        worker.timeLeft--;
+                        if (worker.timeLeft === 0) {
+                            worker.busy = false;
+                            completeTask(workerType, index);
+                        }
+                    }
+                });
+            });
+        }
+
+        function completeTask(workerType, workerIndex) {
+            switch (workerType) {
+                case 'cutters':
+                    stats.cutting.completed++;
+                    stats.cutting.inProgress--;
+                    queues.afterCut.push({ id: Date.now() + Math.random() });
+                    break;
+                case 'butterWorkers':
+                    stats.buttering.completed++;
+                    stats.buttering.inProgress--;
+                    queues.afterButter.push({ id: Date.now() + Math.random() });
+                    break;
+                case 'vegetableWorkers':
+                    stats.vegetables.completed++;
+                    stats.vegetables.inProgress--;
+                    queues.afterVegetables.push({ id: Date.now() + Math.random() });
+                    break;
+                case 'packers':
+                    stats.packing.completed++;
+                    stats.packing.inProgress--;
+                    stats.completed++;
+                    break;
+            }
+        }
+
+        function startNewTasks() {
+            // Start cutting
+            if (stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
+                workers.cutters.forEach(worker => {
+                    if (!worker.busy && stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
+                        worker.busy = true;
+                        worker.timeLeft = config.cutTime;
+                        stats.cutting.inProgress++;
+                    }
+                });
+            }
+
+            // Start buttering
+            if (queues.afterCut.length > 0) {
+                workers.butterWorkers.forEach(worker => {
+                    if (!worker.busy && queues.afterCut.length > 0) {
+                        worker.busy = true;
+                        worker.timeLeft = config.butterTime;
+                        queues.afterCut.shift();
+                        stats.buttering.inProgress++;
+                    }
+                });
+            }
+
+            // Start vegetables
+            if (queues.afterButter.length > 0) {
+                workers.vegetableWorkers.forEach(worker => {
+                    if (!worker.busy && queues.afterButter.length > 0) {
+                        worker.busy = true;
+                        worker.timeLeft = config.vegetableTime;
+                        queues.afterButter.shift();
+                        stats.vegetables.inProgress++;
+                    }
+                });
+            }
+
+            // Start packing
+            if (queues.afterVegetables.length > 0) {
+                workers.packers.forEach(worker => {
+                    if (!worker.busy && queues.afterVegetables.length > 0) {
+                        worker.busy = true;
+                        worker.timeLeft = config.packTime;
+                        queues.afterVegetables.shift();
+                        stats.packing.inProgress++;
+                    }
+                });
+            }
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function initializeWorkerDisplays() {
+            // Initialize cutter workers
+            const cutterContainer = document.getElementById('cutterWorkers');
+            cutterContainer.innerHTML = '';
+            workers.cutters.forEach((worker, index) => {
+                const workerDiv = document.createElement('div');
+                workerDiv.className = 'worker-status worker-free';
+                workerDiv.id = `cutter-${index}`;
+                workerDiv.textContent = 'Rảnh';
+                cutterContainer.appendChild(workerDiv);
+            });
+
+            // Initialize packer workers
+            const packerContainer = document.getElementById('packerWorkers');
+            packerContainer.innerHTML = '';
+            workers.packers.forEach((worker, index) => {
+                const workerDiv = document.createElement('div');
+                workerDiv.className = 'worker-status worker-free';
+                workerDiv.id = `packer-${index}`;
+                workerDiv.textContent = 'Rảnh';
+                packerContainer.appendChild(workerDiv);
+            });
+
+            // Initialize parallel lines
+            const parallelContainer = document.getElementById('parallelLines');
+            parallelContainer.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'line-container';
+                lineDiv.innerHTML = `
+                    <div class="line-title">Dây chuyền ${i + 1}</div>
+                    <div class="line-station border-yellow-500">
+                        <div class="station-name">Quét bơ</div>
+                        <div class="station-status worker-free" id="butter-${i}">Rảnh</div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.875rem; margin: 0.5rem 0;">↓</div>
+                    <div class="line-station border-green-500">
+                        <div class="station-name">Bỏ rau</div>
+                        <div class="station-status worker-free" id="vegetable-${i}">Rảnh</div>
+                    </div>
+                `;
+                parallelContainer.appendChild(lineDiv);
+            }
+        }
+
+        function updateUI() {
+            // Update time
+            document.getElementById('currentTime').textContent = formatTime(currentTime);
+
+            // Update config displays
+            document.getElementById('cutTimeDisplay').textContent = config.cutTime;
+            document.getElementById('packTimeDisplay').textContent = config.packTime;
+            document.getElementById('totalCount').textContent = config.totalBreads;
+
+            // Update progress
+            const completionPercentage = (stats.completed / config.totalBreads * 100).toFixed(1);
+            document.getElementById('completedCount').textContent = stats.completed;
+            document.getElementById('completionPercentage').textContent = completionPercentage + '%';
+            document.getElementById('progressFill').style.width = completionPercentage + '%';
+
+            // Update stats
+            document.getElementById('cutCompleted').textContent = stats.cutting.completed;
+            document.getElementById('butterCompleted').textContent = stats.buttering.completed;
+            document.getElementById('vegetableCompleted').textContent = stats.vegetables.completed;
+            document.getElementById('packCompleted').textContent = stats.packing.completed;
+            document.getElementById('finalCompleted').textContent = stats.completed;
+
+            // Update queues
+            document.getElementById('afterCutQueue').textContent = queues.afterCut.length;
+            document.getElementById('afterVegetableQueue').textContent = queues.afterVegetables.length;
+
+            // Update worker statuses
+            updateWorkerStatus('cutter', workers.cutters);
+            updateWorkerStatus('packer', workers.packers);
+            updateWorkerStatus('butter', workers.butterWorkers);
+            updateWorkerStatus('vegetable', workers.vegetableWorkers);
+
+            // Update statistics table
+            updateStatisticsTable();
+        }
+
+        function updateWorkerStatus(prefix, workerList) {
+            workerList.forEach((worker, index) => {
+                const element = document.getElementById(`${prefix}-${index}`);
+                if (element) {
+                    if (worker.busy) {
+                        element.className = 'worker-status worker-busy';
+                        element.textContent = `Bận (${worker.timeLeft}s)`;
+                    } else {
+                        element.className = 'worker-status worker-free';
+                        element.textContent = 'Rảnh';
+                    }
+                }
+            });
+        }
+
+        function updateStatisticsTable() {
+            // Update table values
+            document.getElementById('cutTimeTable').textContent = config.cutTime;
+            document.getElementById('butterTimeTable').textContent = config.butterTime;
+            document.getElementById('vegetableTimeTable').textContent = config.vegetableTime;
+            document.getElementById('packTimeTable').textContent = config.packTime;
+
+            document.getElementById('cutCompletedTable').textContent = stats.cutting.completed;
+            document.getElementById('butterCompletedTable').textContent = stats.buttering.completed;
+            document.getElementById('vegetableCompletedTable').textContent = stats.vegetables.completed;
+            document.getElementById('packCompletedTable').textContent = stats.packing.completed;
+
+            document.getElementById('cutInProgressTable').textContent = stats.cutting.inProgress;
+            document.getElementById('butterInProgressTable').textContent = stats.buttering.inProgress;
+            document.getElementById('vegetableInProgressTable').textContent = stats.vegetables.inProgress;
+            document.getElementById('packInProgressTable').textContent = stats.packing.inProgress;
+
+            // Calculate efficiency (items per minute)
+            const cutEfficiency = currentTime > 0 ? (stats.cutting.completed / currentTime * 60).toFixed(1) : '0';
+            const butterEfficiency = currentTime > 0 ? (stats.buttering.completed / currentTime * 60).toFixed(1) : '0';
+            const vegetableEfficiency = currentTime > 0 ? (stats.vegetables.completed / currentTime * 60).toFixed(1) : '0';
+            const packEfficiency = currentTime > 0 ? (stats.packing.completed / currentTime * 60).toFixed(1) : '0';
+
+            document.getElementById('cutEfficiencyTable').textContent = cutEfficiency + ' bánh/phút';
+            document.getElementById('butterEfficiencyTable').textContent = butterEfficiency + ' bánh/phút';
+            document.getElementById('vegetableEfficiencyTable').textContent = vegetableEfficiency + ' bánh/phút';
+            document.getElementById('packEfficiencyTable').textContent = packEfficiency + ' bánh/phút';
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
