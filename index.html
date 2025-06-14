@@ -499,12 +499,8 @@
             <!-- Cutting Station -->
             <div class="production-flow">
                 <div class="worker-station border-blue-500">
-                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
-                        Cắt bánh (<span id="cutWorkerDisplay"></span> người)
-                    </h3>
-                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
-                        Thời gian: <span id="cutTimeDisplay">5</span>s
-                    </div>
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Cắt bánh </h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="cutTimeDisplay">5</span>s</div>
                     <div class="worker-grid" id="cutterWorkers">
                         <!-- Workers will be populated by JavaScript -->
                     </div>
@@ -541,12 +537,8 @@
                 </div>
                 <div class="flow-arrow">→</div>
                 <div class="worker-station border-purple-500">
-                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
-                        Đóng gói (<span id="packWorkerDisplay"></span> người)
-                    </h3>
-                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
-                        Thời gian: <span id="packTimeDisplay">5</span>s
-                    </div>
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Đóng gói </h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="packTimeDisplay">5</span>s</div>
                     <div class="worker-grid" id="packerWorkers">
                         <!-- Workers will be populated by JavaScript -->
                     </div>
@@ -726,41 +718,30 @@
             resetSimulation();
         }
 
-        // Cập nhật hàm updateWorkerCount để thêm thông báo
         function updateWorkerCount(type, count) {
-            const oldCount = config[type + 'Workers'];
-            count = Math.max(1, parseInt(count) || 1);
+            count = Math.max(1, parseInt(count) || 1); // Đảm bảo ít nhất 1 người
             
-            if (oldCount !== count) {
-                switch(type) {
-                    case 'cut':
-                        config.cutWorkers = count;
-                        workers.cutters = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                        break;
-                    case 'butter':
-                        config.butterWorkers = count;
-                        workers.butterWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                        break;
-                    case 'vegetable':
-                        config.vegetableWorkers = count;
-                        workers.vegetableWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                        break;
-                    case 'pack':
-                        config.packWorkers = count;
-                        workers.packers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                        break;
-                }
-                
-                // Thêm thông báo khi số lượng công nhân thay đổi
-                if (count > oldCount) {
-                    console.log(`Tăng ${count - oldCount} người ở công đoạn ${type}`);
-                } else if (count < oldCount) {
-                    console.log(`Giảm ${oldCount - count} người ở công đoạn ${type}`);
-                }
-                
-                initializeWorkerDisplays();
-                updateUI();
+            switch(type) {
+                case 'cut':
+                    config.cutWorkers = count;
+                    workers.cutters = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'butter':
+                    config.butterWorkers = count;
+                    workers.butterWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'vegetable':
+                    config.vegetableWorkers = count;
+                    workers.vegetableWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'pack':
+                    config.packWorkers = count;
+                    workers.packers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
             }
+            
+            initializeWorkerDisplays();
+            updateUI();
         }
 
         function updateConfigInputs() {
@@ -850,43 +831,6 @@
             updateUI();
         }
 
-        // Thêm hàm mới để kiểm tra và di chuyển công nhân
-        function checkAndMoveWorkers() {
-            // Kiểm tra công đoạn cắt bánh đã hoàn thành
-            if (stats.cutting.completed >= config.totalBreads && stats.cutting.inProgress === 0) {
-                // Di chuyển công nhân từ cắt bánh sang quét bơ
-                const availableCutters = workers.cutters.filter(w => !w.busy).length;
-                if (availableCutters > 0) {
-                    updateWorkerCount('butter', config.butterWorkers + availableCutters);
-                    updateWorkerCount('cut', config.cutWorkers - availableCutters);
-                    console.log(`Đã di chuyển ${availableCutters} người từ cắt bánh sang quét bơ`);
-                }
-            }
-
-            // Kiểm tra công đoạn quét bơ đã hoàn thành
-            if (stats.buttering.completed >= config.totalBreads && stats.buttering.inProgress === 0) {
-                // Di chuyển công nhân từ quét bơ sang bỏ rau
-                const availableButterWorkers = workers.butterWorkers.filter(w => !w.busy).length;
-                if (availableButterWorkers > 0) {
-                    updateWorkerCount('vegetable', config.vegetableWorkers + availableButterWorkers);
-                    updateWorkerCount('butter', config.butterWorkers - availableButterWorkers);
-                    console.log(`Đã di chuyển ${availableButterWorkers} người từ quét bơ sang bỏ rau`);
-                }
-            }
-
-            // Kiểm tra công đoạn bỏ rau đã hoàn thành
-            if (stats.vegetables.completed >= config.totalBreads && stats.vegetables.inProgress === 0) {
-                // Di chuyển công nhân từ bỏ rau sang đóng gói
-                const availableVegetableWorkers = workers.vegetableWorkers.filter(w => !w.busy).length;
-                if (availableVegetableWorkers > 0) {
-                    updateWorkerCount('pack', config.packWorkers + availableVegetableWorkers);
-                    updateWorkerCount('vegetable', config.vegetableWorkers - availableVegetableWorkers);
-                    console.log(`Đã di chuyển ${availableVegetableWorkers} người từ bỏ rau sang đóng gói`);
-                }
-            }
-        }
-
-        // Cập nhật hàm updateWorkers để gọi checkAndMoveWorkers
         function updateWorkers() {
             ['cutters', 'butterWorkers', 'vegetableWorkers', 'packers'].forEach(workerType => {
                 workers[workerType].forEach((worker, index) => {
@@ -899,9 +843,67 @@
                     }
                 });
             });
-            
-            // Thêm kiểm tra và di chuyển công nhân sau khi cập nhật trạng thái
+
+            // Kiểm tra và di chuyển người sau mỗi chu kỳ
             checkAndMoveWorkers();
+        }
+
+        function checkAndMoveWorkers() {
+            // Kiểm tra công đoạn cắt bánh đã hoàn thành
+            if (stats.cutting.completed >= config.totalBreads) {
+                const availableCutters = workers.cutters.filter(w => !w.busy).length;
+                if (availableCutters > 0) {
+                    // Phân bổ người từ cắt bánh sang quét bơ và bỏ rau
+                    const halfToButtering = Math.floor(availableCutters / 2);
+                    const halfToVegetables = availableCutters - halfToButtering;
+
+                    // Cập nhật số lượng người ở mỗi công đoạn
+                    config.butterWorkers += halfToButtering;
+                    config.vegetableWorkers += halfToVegetables;
+                    config.cutWorkers -= availableCutters;
+
+                    // Cập nhật danh sách workers
+                    workers.butterWorkers.push(...Array(halfToButtering).fill().map(() => ({ busy: false, timeLeft: 0 })));
+                    workers.vegetableWorkers.push(...Array(halfToVegetables).fill().map(() => ({ busy: false, timeLeft: 0 })));
+                    workers.cutters = workers.cutters.filter(w => w.busy);
+
+                    console.log(`Đã chuyển ${halfToButtering} người sang quét bơ và ${halfToVegetables} người sang bỏ rau`);
+                }
+            }
+
+            // Kiểm tra công đoạn quét bơ đã hoàn thành
+            if (stats.buttering.completed >= config.totalBreads) {
+                const availableButterWorkers = workers.butterWorkers.filter(w => !w.busy).length;
+                if (availableButterWorkers > 0) {
+                    // Chuyển toàn bộ sang bỏ rau
+                    config.vegetableWorkers += availableButterWorkers;
+                    config.butterWorkers -= availableButterWorkers;
+
+                    workers.vegetableWorkers.push(...Array(availableButterWorkers).fill().map(() => ({ busy: false, timeLeft: 0 })));
+                    workers.butterWorkers = workers.butterWorkers.filter(w => w.busy);
+
+                    console.log(`Đã chuyển ${availableButterWorkers} người từ quét bơ sang bỏ rau`);
+                }
+            }
+
+            // Kiểm tra công đoạn bỏ rau đã hoàn thành
+            if (stats.vegetables.completed >= config.totalBreads) {
+                const availableVegWorkers = workers.vegetableWorkers.filter(w => !w.busy).length;
+                if (availableVegWorkers > 0) {
+                    // Chuyển toàn bộ sang đóng gói
+                    config.packWorkers += availableVegWorkers;
+                    config.vegetableWorkers -= availableVegWorkers;
+
+                    workers.packers.push(...Array(availableVegWorkers).fill().map(() => ({ busy: false, timeLeft: 0 })));
+                    workers.vegetableWorkers = workers.vegetableWorkers.filter(w => w.busy);
+
+                    console.log(`Đã chuyển ${availableVegWorkers} người từ bỏ rau sang đóng gói`);
+                }
+            }
+
+            // Cập nhật giao diện sau khi di chuyển
+            initializeWorkerDisplays();
+            updateUI();
         }
 
         function completeTask(workerType, workerIndex) {
@@ -1092,10 +1094,6 @@
             updateWorkerStatus('butter', workers.butterWorkers);
             updateWorkerStatus('vegetable', workers.vegetableWorkers);
 
-            // Cập nhật hiển thị số người
-            document.getElementById('cutWorkerDisplay').textContent = config.cutWorkers;
-            document.getElementById('packWorkerDisplay').textContent = config.packWorkers;
-
             // Update statistics table
             updateStatisticsTable();
 
@@ -1142,16 +1140,35 @@
             document.getElementById('vegetableWorkersCount').textContent = config.vegetableWorkers;
             document.getElementById('packWorkersCount').textContent = config.packWorkers;
 
-            // Calculate efficiency (items per minute)
-            const cutEfficiency = currentTime > 0 ? (stats.cutting.completed / currentTime * 60).toFixed(1) : '0';
-            const butterEfficiency = currentTime > 0 ? (stats.buttering.completed / currentTime * 60).toFixed(1) : '0';
-            const vegetableEfficiency = currentTime > 0 ? (stats.vegetables.completed / currentTime * 60).toFixed(1) : '0';
-            const packEfficiency = currentTime > 0 ? (stats.packing.completed / currentTime * 60).toFixed(1) : '0';
+            // Tính hiệu suất thực tế (bánh/phút) dựa trên công thức:
+            // Hiệu suất = (Số người × 60) ÷ Thời gian hoàn thành 1 bánh
+            const cutEfficiency = (config.cutWorkers * 60 / config.cutTime).toFixed(1);
+            const butterEfficiency = (config.butterWorkers * 60 / config.butterTime).toFixed(1);
+            const vegetableEfficiency = (config.vegetableWorkers * 60 / config.vegetableTime).toFixed(1);
+            const packEfficiency = (config.packWorkers * 60 / config.packTime).toFixed(1);
 
-            document.getElementById('cutEfficiencyTable').textContent = cutEfficiency + ' bánh/phút';
-            document.getElementById('butterEfficiencyTable').textContent = butterEfficiency + ' bánh/phút';
-            document.getElementById('vegetableEfficiencyTable').textContent = vegetableEfficiency + ' bánh/phút';
-            document.getElementById('packEfficiencyTable').textContent = packEfficiency + ' bánh/phút';
+            // Thêm logic để tính hiệu suất thực tế khi di chuyển người
+            const actualCutEfficiency = stats.cutting.completed > 0 ? 
+                Math.min(cutEfficiency, (stats.cutting.completed / (currentTime / 60)).toFixed(1)) : 
+                cutEfficiency;
+
+            const actualButterEfficiency = stats.buttering.completed > 0 ? 
+                Math.min(butterEfficiency, (stats.buttering.completed / (currentTime / 60)).toFixed(1)) : 
+                butterEfficiency;
+
+            const actualVegetableEfficiency = stats.vegetables.completed > 0 ? 
+                Math.min(vegetableEfficiency, (stats.vegetables.completed / (currentTime / 60)).toFixed(1)) : 
+                vegetableEfficiency;
+
+            const actualPackEfficiency = stats.packing.completed > 0 ? 
+                Math.min(packEfficiency, (stats.packing.completed / (currentTime / 60)).toFixed(1)) : 
+                packEfficiency;
+
+            // Cập nhật hiển thị
+            document.getElementById('cutEfficiencyTable').textContent = actualCutEfficiency + ' bánh/phút';
+            document.getElementById('butterEfficiencyTable').textContent = actualButterEfficiency + ' bánh/phút';
+            document.getElementById('vegetableEfficiencyTable').textContent = actualVegetableEfficiency + ' bánh/phút';
+            document.getElementById('packEfficiencyTable').textContent = actualPackEfficiency + ' bánh/phút';
         }
 
         // Initialize the application when the page loads
@@ -1159,4 +1176,4 @@
     </script>
 </body>
 </html>
-``` 
+`
