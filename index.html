@@ -440,6 +440,22 @@
                     <label>Thời gian đóng gói (s)</label>
                     <input type="number" id="packTime" value="5">
                 </div>
+                <div class="config-item">
+                    <label>Số người cắt bánh</label>
+                    <input type="number" id="cutWorkers" min="1" value="2" onchange="updateConfig()">
+                </div>
+                <div class="config-item">
+                    <label>Số người quét bơ</label>
+                    <input type="number" id="butterWorkers" min="1" value="4" onchange="updateConfig()">
+                </div>
+                <div class="config-item">
+                    <label>Số người bỏ rau</label>
+                    <input type="number" id="vegetableWorkers" min="1" value="4" onchange="updateConfig()">
+                </div>
+                <div class="config-item">
+                    <label>Số người đóng gói</label>
+                    <input type="number" id="packWorkers" min="1" value="2" onchange="updateConfig()">
+                </div>
             </div>
         </div>
 
@@ -483,8 +499,12 @@
             <!-- Cutting Station -->
             <div class="production-flow">
                 <div class="worker-station border-blue-500">
-                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Cắt bánh (2 người)</h3>
-                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="cutTimeDisplay">5</span>s</div>
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
+                        Cắt bánh (<span id="cutWorkerDisplay"></span> người)
+                    </h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+                        Thời gian: <span id="cutTimeDisplay">5</span>s
+                    </div>
                     <div class="worker-grid" id="cutterWorkers">
                         <!-- Workers will be populated by JavaScript -->
                     </div>
@@ -521,8 +541,12 @@
                 </div>
                 <div class="flow-arrow">→</div>
                 <div class="worker-station border-purple-500">
-                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">Đóng gói (2 người)</h3>
-                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">Thời gian: <span id="packTimeDisplay">5</span>s</div>
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
+                        Đóng gói (<span id="packWorkerDisplay"></span> người)
+                    </h3>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+                        Thời gian: <span id="packTimeDisplay">5</span>s
+                    </div>
                     <div class="worker-grid" id="packerWorkers">
                         <!-- Workers will be populated by JavaScript -->
                     </div>
@@ -553,7 +577,7 @@
                     <tbody>
                         <tr>
                             <td>Cắt bánh</td>
-                            <td>2</td>
+                            <td id="cutWorkersCount">2</td>
                             <td id="cutTimeTable">5</td>
                             <td id="cutCompletedTable">0</td>
                             <td class="text-red-600" id="cutInProgressTable">0</td>
@@ -561,7 +585,7 @@
                         </tr>
                         <tr>
                             <td>Quét bơ</td>
-                            <td>4</td>
+                            <td id="butterWorkersCount">4</td>
                             <td id="butterTimeTable">15</td>
                             <td id="butterCompletedTable">0</td>
                             <td class="text-red-600" id="butterInProgressTable">0</td>
@@ -569,7 +593,7 @@
                         </tr>
                         <tr>
                             <td>Bỏ rau</td>
-                            <td>4</td>
+                            <td id="vegetableWorkersCount">4</td>
                             <td id="vegetableTimeTable">20</td>
                             <td id="vegetableCompletedTable">0</td>
                             <td class="text-red-600" id="vegetableInProgressTable">0</td>
@@ -577,7 +601,7 @@
                         </tr>
                         <tr>
                             <td>Đóng gói</td>
-                            <td>2</td>
+                            <td id="packWorkersCount">2</td>
                             <td id="packTimeTable">5</td>
                             <td id="packCompletedTable">0</td>
                             <td class="text-red-600" id="packInProgressTable">0</td>
@@ -596,7 +620,11 @@
             cutTime: 5,
             butterTime: 15,
             vegetableTime: 20,
-            packTime: 5
+            packTime: 5,
+            cutWorkers: 2,
+            butterWorkers: 4,
+            vegetableWorkers: 4,
+            packWorkers: 2
         };
 
         let isRunning = false;
@@ -623,16 +651,10 @@
 
         // Khởi tạo đúng số worker ban đầu: 2 cắt, 4 quét bơ, 2 bỏ rau, 2 đóng gói (bỏ rau sẽ tăng khi chuyển người)
         let workers = {
-            cutters: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }],
-            butterWorkers: [
-                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
-                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
-            ],
-            vegetableWorkers: [
-                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
-                { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
-            ],
-            packers: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }]
+            cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
+            butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
+            vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
+            packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
         };
 
         // DOM elements
@@ -665,6 +687,10 @@
             document.getElementById('butterTime').addEventListener('change', updateConfig);
             document.getElementById('vegetableTime').addEventListener('change', updateConfig);
             document.getElementById('packTime').addEventListener('change', updateConfig);
+            document.getElementById('cutWorkers').addEventListener('change', updateConfig);
+            document.getElementById('butterWorkers').addEventListener('change', updateConfig);
+            document.getElementById('vegetableWorkers').addEventListener('change', updateConfig);
+            document.getElementById('packWorkers').addEventListener('change', updateConfig);
         }
 
         function changeSpeed() {
@@ -686,6 +712,43 @@
             config.butterTime = parseInt(document.getElementById('butterTime').value) || 0;
             config.vegetableTime = parseInt(document.getElementById('vegetableTime').value) || 0;
             config.packTime = parseInt(document.getElementById('packTime').value) || 0;
+
+            const newCutWorkers = parseInt(document.getElementById('cutWorkers').value) || 1;
+            const newButterWorkers = parseInt(document.getElementById('butterWorkers').value) || 1;
+            const newVegetableWorkers = parseInt(document.getElementById('vegetableWorkers').value) || 1;
+            const newPackWorkers = parseInt(document.getElementById('packWorkers').value) || 1;
+
+            updateWorkerCount('cut', newCutWorkers);
+            updateWorkerCount('butter', newButterWorkers);
+            updateWorkerCount('vegetable', newVegetableWorkers);
+            updateWorkerCount('pack', newPackWorkers);
+            
+            resetSimulation();
+        }
+
+        function updateWorkerCount(type, count) {
+            count = Math.max(1, parseInt(count) || 1); // Đảm bảo ít nhất 1 người
+            
+            switch(type) {
+                case 'cut':
+                    config.cutWorkers = count;
+                    workers.cutters = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'butter':
+                    config.butterWorkers = count;
+                    workers.butterWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'vegetable':
+                    config.vegetableWorkers = count;
+                    workers.vegetableWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+                case 'pack':
+                    config.packWorkers = count;
+                    workers.packers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+                    break;
+            }
+            
+            initializeWorkerDisplays();
             updateUI();
         }
 
@@ -695,6 +758,10 @@
             document.getElementById('butterTime').value = config.butterTime;
             document.getElementById('vegetableTime').value = config.vegetableTime;
             document.getElementById('packTime').value = config.packTime;
+            document.getElementById('cutWorkers').value = config.cutWorkers;
+            document.getElementById('butterWorkers').value = config.butterWorkers;
+            document.getElementById('vegetableWorkers').value = config.vegetableWorkers;
+            document.getElementById('packWorkers').value = config.packWorkers;
         }
 
         function toggleConfig() {
@@ -759,16 +826,10 @@
             };
 
             workers = {
-                cutters: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }],
-                butterWorkers: [
-                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
-                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
-                ],
-                vegetableWorkers: [
-                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 },
-                    { busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }
-                ],
-                packers: [{ busy: false, timeLeft: 0 }, { busy: false, timeLeft: 0 }]
+                cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
+                butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
+                vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
+                packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
             };
 
             playPauseBtn.className = 'btn btn-start';
@@ -798,32 +859,11 @@
                     stats.cutting.completed++;
                     stats.cutting.inProgress--;
                     queues.afterCut.push({ id: Date.now() + Math.random() });
-                    // Khi cắt xong toàn bộ, chuyển 1 người sang phết bơ, 1 người sang bỏ rau
-                    if (
-                        stats.cutting.completed === config.totalBreads &&
-                        workers.cutters.length > 0
-                    ) {
-                        workers.butterWorkers.push({ busy: false, timeLeft: 0 });    // +1 phết bơ
-                        workers.vegetableWorkers.push({ busy: false, timeLeft: 0 }); // +1 bỏ rau
-                        workers.cutters = [];
-                        initializeWorkerDisplays();
-                    }
                     break;
                 case 'butterWorkers':
                     stats.buttering.completed++;
                     stats.buttering.inProgress--;
                     queues.afterButter.push({ id: Date.now() + Math.random() });
-                    // Khi phết bơ xong toàn bộ, chuyển toàn bộ người phết bơ sang bỏ rau
-                    if (
-                        stats.buttering.completed === config.totalBreads &&
-                        workers.butterWorkers.length > 0
-                    ) {
-                        workers.butterWorkers.forEach(() => {
-                            workers.vegetableWorkers.push({ busy: false, timeLeft: 0 });
-                        });
-                        workers.butterWorkers = [];
-                        initializeWorkerDisplays();
-                    }
                     break;
                 case 'vegetableWorkers':
                     stats.vegetables.completed++;
@@ -888,40 +928,23 @@
         }
 
         function calculateETA() {
-            if (stats.completed === 0 && currentTime === 0) {
-                return "Chưa bắt đầu";
-            }
-
-            if (stats.completed >= config.totalBreads) {
-                return "Đã hoàn thành";
-            }
-
-            // Tính tốc độ sản xuất hiện tại (bánh/giây)
-            let currentRate = 0;
-            if (currentTime > 0) {
-                currentRate = stats.completed / currentTime;
-            }
-
-            // Nếu tốc độ = 0, tính dựa trên năng suất lý thuyết
-            if (currentRate === 0) {
-                // Tìm bottleneck (công đoạn chậm nhất)
-                const cutRate = 2 / config.cutTime; // 2 người cắt
-                const butterRate = 4 / config.butterTime; // 4 người quét bơ
-                const vegetableRate = 4 / config.vegetableTime; // 4 người bỏ rau
-                const packRate = 2 / config.packTime; // 2 người đóng gói
-
-                currentRate = Math.min(cutRate, butterRate, vegetableRate, packRate);
-            }
-
-            if (currentRate <= 0) {
-                return "Không thể tính";
-            }
-
-            const remainingBreads = config.totalBreads - stats.completed;
-            const estimatedTimeRemaining = remainingBreads / currentRate;
-            const totalEstimatedTime = currentTime + estimatedTimeRemaining;
-
-            return formatTime(Math.ceil(totalEstimatedTime));
+            if (stats.completed >= config.totalBreads) return '00:00:00';
+            
+            const remainingItems = config.totalBreads - stats.completed;
+            
+            // Tính tốc độ dựa trên số người
+            const cutRate = config.cutWorkers / config.cutTime;
+            const butterRate = config.butterWorkers / config.butterTime;
+            const vegetableRate = config.vegetableWorkers / config.vegetableTime;
+            const packRate = config.packWorkers / config.packTime;
+            
+            // Tìm công đoạn chậm nhất (bottleneck)
+            const bottleneckRate = Math.min(cutRate, butterRate, vegetableRate, packRate);
+            
+            // Tính thời gian còn lại (giây)
+            const remainingSeconds = Math.ceil(remainingItems / bottleneckRate);
+            
+            return formatTime(remainingSeconds);
         }
 
         function formatTime(seconds) {
@@ -943,7 +966,7 @@
                 cutterContainer.appendChild(workerDiv);
             });
 
-            // Packer workers (luôn 2)
+            // Packer workers
             const packerContainer = document.getElementById('packerWorkers');
             packerContainer.innerHTML = '';
             workers.packers.forEach((worker, index) => {
@@ -1018,6 +1041,10 @@
             updateWorkerStatus('butter', workers.butterWorkers);
             updateWorkerStatus('vegetable', workers.vegetableWorkers);
 
+            // Cập nhật hiển thị số người
+            document.getElementById('cutWorkerDisplay').textContent = config.cutWorkers;
+            document.getElementById('packWorkerDisplay').textContent = config.packWorkers;
+
             // Update statistics table
             updateStatisticsTable();
 
@@ -1058,6 +1085,11 @@
             document.getElementById('butterInProgressTable').textContent = stats.buttering.inProgress;
             document.getElementById('vegetableInProgressTable').textContent = stats.vegetables.inProgress;
             document.getElementById('packInProgressTable').textContent = stats.packing.inProgress;
+
+            document.getElementById('cutWorkersCount').textContent = config.cutWorkers;
+            document.getElementById('butterWorkersCount').textContent = config.butterWorkers;
+            document.getElementById('vegetableWorkersCount').textContent = config.vegetableWorkers;
+            document.getElementById('packWorkersCount').textContent = config.packWorkers;
 
             // Calculate efficiency (items per minute)
             const cutEfficiency = currentTime > 0 ? (stats.cutting.completed / currentTime * 60).toFixed(1) : '0';
