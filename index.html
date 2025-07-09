@@ -606,574 +606,667 @@
     </div>
 
     <script>
-        // Global state
-        let config = {
-            totalBreads: 4500,
-            cutTime: 5,
-            butterTime: 15,
-            vegetableTime: 20,
-            packTime: 5,
-            cutWorkers: 2,
-            butterWorkers: 4,
-            vegetableWorkers: 4,
-            packWorkers: 2
-        };
+       // Global state
+let config = {
+    totalBreads: 4500,
+    cutTime: 5,
+    butterTime: 15,
+    vegetableTime: 20,
+    packTime: 5,
+    cutWorkers: 2,
+    butterWorkers: 4,
+    vegetableWorkers: 4,
+    packWorkers: 2
+};
 
-        let isRunning = false;
-        let showConfig = false;
-        let currentTime = 0;
-        let intervalId = null;
-        let speedMultiplier = 1; 
-        let speedOptions = [1, 2, 5, 10, 20,200]; 
-        let currentSpeedIndex = 0;
+let isRunning = false;
+let showConfig = false;
+let currentTime = 0;
+let intervalId = null;
 
-        let stats = {
-            completed: 0,
-            cutting: { completed: 0, inProgress: 0 },
-            buttering: { completed: 0, inProgress: 0 },
-            vegetables: { completed: 0, inProgress: 0 },
-            packing: { completed: 0, inProgress: 0 }
-        };
+// Thay đổi cấu hình tốc độ
+let speedOptions = [1, 2, 5, 10, 20, 50, 100, 200];
+let currentSpeedIndex = 0;
+let speedMultiplier = speedOptions[currentSpeedIndex];
 
-        let queues = {
-            afterCut: [],
-            afterButter: [],
-            afterVegetables: []
-        };
+let stats = {
+    completed: 0,
+    cutting: { completed: 0, inProgress: 0 },
+    buttering: { completed: 0, inProgress: 0 },
+    vegetables: { completed: 0, inProgress: 0 },
+    packing: { completed: 0, inProgress: 0 }
+};
 
-        // Khởi tạo đúng số worker ban đầu: 2 cắt, 4 quét bơ, 2 bỏ rau, 2 đóng gói (bỏ rau sẽ tăng khi chuyển người)
-        let workers = {
-            cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
-            butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
-            vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
-            packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
-        };
+let queues = {
+    afterCut: [],
+    afterButter: [],
+    afterVegetables: []
+};
 
-        // DOM elements
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const playPauseIcon = document.getElementById('playPauseIcon');
-        const playPauseText = document.getElementById('playPauseText');
-        const resetBtn = document.getElementById('resetBtn');
-        const configBtn = document.getElementById('configBtn');
-        const configPanel = document.getElementById('configPanel');
-        const speedBtn = document.getElementById('speedBtn');
-        const speedText = document.getElementById('speedText');
+// Khởi tạo đúng số worker ban đầu
+let workers = {
+    cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
+    butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
+    vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
+    packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
+};
 
-        // Initialize the application
-        function init() {
-            setupEventListeners();
-            updateConfigInputs();
-            initializeWorkerDisplays();
-            updateUI();
-        }
+// Biến để theo dõi thời gian thực
+let lastUpdateTime = 0;
+let accumulatedTime = 0;
 
-        function setupEventListeners() {
-            playPauseBtn.addEventListener('click', toggleSimulation);
-            resetBtn.addEventListener('click', resetSimulation);
-            configBtn.addEventListener('click', toggleConfig);
-            speedBtn.addEventListener('click', changeSpeed);
+// DOM elements
+const playPauseBtn = document.getElementById('playPauseBtn');
+const playPauseIcon = document.getElementById('playPauseIcon');
+const playPauseText = document.getElementById('playPauseText');
+const resetBtn = document.getElementById('resetBtn');
+const configBtn = document.getElementById('configBtn');
+const configPanel = document.getElementById('configPanel');
+const speedBtn = document.getElementById('speedBtn');
+const speedText = document.getElementById('speedText');
 
-            // Config inputs
-            document.getElementById('totalBreads').addEventListener('change', updateConfig);
-            document.getElementById('cutTime').addEventListener('change', updateConfig);
-            document.getElementById('butterTime').addEventListener('change', updateConfig);
-            document.getElementById('vegetableTime').addEventListener('change', updateConfig);
-            document.getElementById('packTime').addEventListener('change', updateConfig);
-            document.getElementById('cutWorkers').addEventListener('change', updateConfig);
-            document.getElementById('butterWorkers').addEventListener('change', updateConfig);
-            document.getElementById('vegetableWorkers').addEventListener('change', updateConfig);
-            document.getElementById('packWorkers').addEventListener('change', updateConfig);
-        }
+// Initialize the application
+function init() {
+    setupEventListeners();
+    updateConfigInputs();
+    initializeWorkerDisplays();
+    updateUI();
+}
 
-        function changeSpeed() {
-            currentSpeedIndex = (currentSpeedIndex + 1) % speedOptions.length;
-            speedMultiplier = speedOptions[currentSpeedIndex];
-            speedText.textContent = speedMultiplier + 'x';
-            document.getElementById('currentSpeed').textContent = speedMultiplier + 'x';
+function setupEventListeners() {
+    playPauseBtn.addEventListener('click', toggleSimulation);
+    resetBtn.addEventListener('click', resetSimulation);
+    configBtn.addEventListener('click', toggleConfig);
+    speedBtn.addEventListener('click', changeSpeed);
+
+    // Config inputs
+    document.getElementById('totalBreads').addEventListener('change', updateConfig);
+    document.getElementById('cutTime').addEventListener('change', updateConfig);
+    document.getElementById('butterTime').addEventListener('change', updateConfig);
+    document.getElementById('vegetableTime').addEventListener('change', updateConfig);
+    document.getElementById('packTime').addEventListener('change', updateConfig);
+    document.getElementById('cutWorkers').addEventListener('change', updateConfig);
+    document.getElementById('butterWorkers').addEventListener('change', updateConfig);
+    document.getElementById('vegetableWorkers').addEventListener('change', updateConfig);
+    document.getElementById('packWorkers').addEventListener('change', updateConfig);
+}
+
+function changeSpeed() {
+    currentSpeedIndex = (currentSpeedIndex + 1) % speedOptions.length;
+    speedMultiplier = speedOptions[currentSpeedIndex];
+    
+    // Cập nhật hiển thị
+    speedText.textContent = speedMultiplier + 'x';
+    document.getElementById('currentSpeed').textContent = speedMultiplier + 'x';
+    
+    // Khởi động lại mô phỏng với tốc độ mới nếu đang chạy
+    if (isRunning) {
+        stopSimulation();
+        startSimulation();
+    }
+}
+
+function updateConfig() {
+    config.totalBreads = parseInt(document.getElementById('totalBreads').value) || 0;
+    config.cutTime = parseInt(document.getElementById('cutTime').value) || 0;
+    config.butterTime = parseInt(document.getElementById('butterTime').value) || 0;
+    config.vegetableTime = parseInt(document.getElementById('vegetableTime').value) || 0;
+    config.packTime = parseInt(document.getElementById('packTime').value) || 0;
+
+    const newCutWorkers = parseInt(document.getElementById('cutWorkers').value) || 1;
+    const newButterWorkers = parseInt(document.getElementById('butterWorkers').value) || 1;
+    const newVegetableWorkers = parseInt(document.getElementById('vegetableWorkers').value) || 1;
+    const newPackWorkers = parseInt(document.getElementById('packWorkers').value) || 1;
+
+    updateWorkerCount('cut', newCutWorkers);
+    updateWorkerCount('butter', newButterWorkers);
+    updateWorkerCount('vegetable', newVegetableWorkers);
+    updateWorkerCount('pack', newPackWorkers);
+    
+    resetSimulation();
+}
+
+function updateWorkerCount(type, count) {
+    count = Math.max(1, parseInt(count) || 1);
+    
+    switch(type) {
+        case 'cut':
+            config.cutWorkers = count;
+            workers.cutters = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+            break;
+        case 'butter':
+            config.butterWorkers = count;
+            workers.butterWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+            break;
+        case 'vegetable':
+            config.vegetableWorkers = count;
+            workers.vegetableWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+            break;
+        case 'pack':
+            config.packWorkers = count;
+            workers.packers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
+            break;
+    }
+    
+    initializeWorkerDisplays();
+    updateUI();
+}
+
+function updateConfigInputs() {
+    document.getElementById('totalBreads').value = config.totalBreads;
+    document.getElementById('cutTime').value = config.cutTime;
+    document.getElementById('butterTime').value = config.butterTime;
+    document.getElementById('vegetableTime').value = config.vegetableTime;
+    document.getElementById('packTime').value = config.packTime;
+    document.getElementById('cutWorkers').value = config.cutWorkers;
+    document.getElementById('butterWorkers').value = config.butterWorkers;
+    document.getElementById('vegetableWorkers').value = config.vegetableWorkers;
+    document.getElementById('packWorkers').value = config.packWorkers;
+}
+
+function toggleConfig() {
+    showConfig = !showConfig;
+    configPanel.classList.toggle('show', showConfig);
+}
+
+function toggleSimulation() {
+    isRunning = !isRunning;
+    
+    if (isRunning) {
+        playPauseBtn.className = 'btn btn-pause';
+        playPauseIcon.textContent = '⏸';
+        playPauseText.textContent = 'Tạm dừng';
+        startSimulation();
+    } else {
+        playPauseBtn.className = 'btn btn-start';
+        playPauseIcon.textContent = '▶';
+        playPauseText.textContent = 'Bắt đầu';
+        stopSimulation();
+    }
+}
+
+function startSimulation() {
+    lastUpdateTime = Date.now();
+    accumulatedTime = 0;
+    
+    // Sử dụng interval cố định 50ms để có độ mượt tốt
+    intervalId = setInterval(() => {
+        const now = Date.now();
+        const deltaTime = now - lastUpdateTime;
+        lastUpdateTime = now;
+        
+        // Tích lũy thời gian với tốc độ multiplier
+        accumulatedTime += (deltaTime / 1000) * speedMultiplier;
+        
+        // Xử lý từng giây một cách chính xác
+        while (accumulatedTime >= 1 && stats.completed < config.totalBreads) {
+            currentTime++;
+            accumulatedTime -= 1;
             
-            // Restart interval với tốc độ mới nếu đang chạy
-            if (isRunning) {
-                stopSimulation();
-                startSimulation();
-            }
-        }
-
-        function updateConfig() {
-            config.totalBreads = parseInt(document.getElementById('totalBreads').value) || 0;
-            config.cutTime = parseInt(document.getElementById('cutTime').value) || 0;
-            config.butterTime = parseInt(document.getElementById('butterTime').value) || 0;
-            config.vegetableTime = parseInt(document.getElementById('vegetableTime').value) || 0;
-            config.packTime = parseInt(document.getElementById('packTime').value) || 0;
-
-            const newCutWorkers = parseInt(document.getElementById('cutWorkers').value) || 1;
-            const newButterWorkers = parseInt(document.getElementById('butterWorkers').value) || 1;
-            const newVegetableWorkers = parseInt(document.getElementById('vegetableWorkers').value) || 1;
-            const newPackWorkers = parseInt(document.getElementById('packWorkers').value) || 1;
-
-            updateWorkerCount('cut', newCutWorkers);
-            updateWorkerCount('butter', newButterWorkers);
-            updateWorkerCount('vegetable', newVegetableWorkers);
-            updateWorkerCount('pack', newPackWorkers);
-            
-            resetSimulation();
-        }
-
-        function updateWorkerCount(type, count) {
-            count = Math.max(1, parseInt(count) || 1); // Đảm bảo ít nhất 1 người
-            
-            switch(type) {
-                case 'cut':
-                    config.cutWorkers = count;
-                    workers.cutters = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                    break;
-                case 'butter':
-                    config.butterWorkers = count;
-                    workers.butterWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                    break;
-                case 'vegetable':
-                    config.vegetableWorkers = count;
-                    workers.vegetableWorkers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                    break;
-                case 'pack':
-                    config.packWorkers = count;
-                    workers.packers = Array.from({ length: count }, () => ({ busy: false, timeLeft: 0 }));
-                    break;
-            }
-            
-            initializeWorkerDisplays();
-            updateUI();
-        }
-
-        function updateConfigInputs() {
-            document.getElementById('totalBreads').value = config.totalBreads;
-            document.getElementById('cutTime').value = config.cutTime;
-            document.getElementById('butterTime').value = config.butterTime;
-            document.getElementById('vegetableTime').value = config.vegetableTime;
-            document.getElementById('packTime').value = config.packTime;
-            document.getElementById('cutWorkers').value = config.cutWorkers;
-            document.getElementById('butterWorkers').value = config.butterWorkers;
-            document.getElementById('vegetableWorkers').value = config.vegetableWorkers;
-            document.getElementById('packWorkers').value = config.packWorkers;
-        }
-
-        function toggleConfig() {
-            showConfig = !showConfig;
-            configPanel.classList.toggle('show', showConfig);
-        }
-
-        function toggleSimulation() {
-            isRunning = !isRunning;
-            
-            if (isRunning) {
-                playPauseBtn.className = 'btn btn-pause';
-                playPauseIcon.textContent = '⏸';
-                playPauseText.textContent = 'Tạm dừng';
-                startSimulation();
-            } else {
-                playPauseBtn.className = 'btn btn-start';
-                playPauseIcon.textContent = '▶';
-                playPauseText.textContent = 'Bắt đầu';
-                stopSimulation();
-            }
-        }
-
-        function startSimulation() {
-            intervalId = setInterval(() => {
-                currentTime += speedMultiplier;
-                
-                // Cập nhật workers theo tốc độ
-                for (let i = 0; i < speedMultiplier; i++) {
-                    updateWorkers();
-                    startNewTasks();
-                }
-                
-                updateUI();
-            }, 1000);
-        }
-
-        function stopSimulation() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-        }
-
-        function resetSimulation() {
-            stopSimulation();
-            isRunning = false;
-            currentTime = 0;
-
-            stats = {
-                completed: 0,
-                cutting: { completed: 0, inProgress: 0 },
-                buttering: { completed: 0, inProgress: 0 },
-                vegetables: { completed: 0, inProgress: 0 },
-                packing: { completed: 0, inProgress: 0 }
-            };
-
-            queues = {
-                afterCut: [],
-                afterButter: [],
-                afterVegetables: []
-            };
-
-            workers = {
-                cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
-                butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
-                vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
-                packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
-            };
-
-            playPauseBtn.className = 'btn btn-start';
-            playPauseIcon.textContent = '▶';
-            playPauseText.textContent = 'Bắt đầu';
-
-            updateUI();
-        }
-
-        function updateWorkers() {
-            ['cutters', 'butterWorkers', 'vegetableWorkers', 'packers'].forEach(workerType => {
-                workers[workerType].forEach((worker, index) => {
-                    if (worker.busy && worker.timeLeft > 0) {
-                        worker.timeLeft--;
-                        if (worker.timeLeft === 0) {
-                            worker.busy = false;
-                            completeTask(workerType, index);
-                        }
-                    }
-                });
-            });
-
-            // Kiểm tra và di chuyển người sau mỗi chu kỳ
+            updateWorkers();
+            startNewTasks();
             checkAndMoveWorkers();
         }
+        
+        updateUI();
+        
+        // Tự động dừng khi hoàn thành
+        if (stats.completed >= config.totalBreads && isRunning) {
+            toggleSimulation();
+        }
+    }, 50);
+}
 
-        function checkAndMoveWorkers() {
-            // Kiểm tra công đoạn cắt bánh đã hoàn thành
-            if (stats.cutting.completed >= config.totalBreads) {
-                const availableCutters = workers.cutters.filter(w => !w.busy).length;
-                if (availableCutters > 0) {
-                    // Phân bổ người từ cắt bánh sang quét bơ và bỏ rau
-                    const halfToButtering = Math.floor(availableCutters / 2);
-                    const halfToVegetables = availableCutters - halfToButtering;
+function stopSimulation() {
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+}
 
-                    // Cập nhật số lượng người ở mỗi công đoạn
-                    config.butterWorkers += halfToButtering;
-                    config.vegetableWorkers += halfToVegetables;
-                    config.cutWorkers -= availableCutters;
+function resetSimulation() {
+    // Dừng simulation
+    stopSimulation();
+    isRunning = false;
+    
+    // Reset thời gian và các biến timing
+    currentTime = 0;
+    lastUpdateTime = 0;
+    accumulatedTime = 0;
 
-                    // Cập nhật danh sách workers
-                    workers.butterWorkers.push(...Array(halfToButtering).fill().map(() => ({ busy: false, timeLeft: 0 })));
-                    workers.vegetableWorkers.push(...Array(halfToVegetables).fill().map(() => ({ busy: false, timeLeft: 0 })));
-                    workers.cutters = workers.cutters.filter(w => w.busy);
+    // Reset tất cả stats về 0
+    stats = {
+        completed: 0,
+        cutting: { completed: 0, inProgress: 0 },
+        buttering: { completed: 0, inProgress: 0 },
+        vegetables: { completed: 0, inProgress: 0 },
+        packing: { completed: 0, inProgress: 0 }
+    };
 
-                    console.log(`Đã chuyển ${halfToButtering} người sang quét bơ và ${halfToVegetables} người sang bỏ rau`);
+    // Reset tất cả queues về rỗng
+    queues = {
+        afterCut: [],
+        afterButter: [],
+        afterVegetables: []
+    };
+
+    // Reset workers về trạng thái ban đầu dựa trên config hiện tại
+    // (KHÔNG thay đổi config, chỉ reset trạng thái workers)
+    workers = {
+        cutters: Array.from({ length: config.cutWorkers }, () => ({ busy: false, timeLeft: 0 })),
+        butterWorkers: Array.from({ length: config.butterWorkers }, () => ({ busy: false, timeLeft: 0 })),
+        vegetableWorkers: Array.from({ length: config.vegetableWorkers }, () => ({ busy: false, timeLeft: 0 })),
+        packers: Array.from({ length: config.packWorkers }, () => ({ busy: false, timeLeft: 0 }))
+    };
+
+    // Reset button về trạng thái ban đầu
+    playPauseBtn.className = 'btn btn-start';
+    playPauseIcon.textContent = '▶';
+    playPauseText.textContent = 'Bắt đầu';
+
+    // Khởi tạo lại hiển thị workers với config hiện tại
+    initializeWorkerDisplays();
+    
+    // Cập nhật các input fields để đảm bảo sync với config
+    updateConfigInputs();
+    
+    // Cập nhật UI để phản ánh trạng thái reset
+    updateUI();
+    
+    console.log('Simulation reset - Config preserved:', config);
+    console.log('Workers initialized:', workers);
+}
+function updateWorkers() {
+    // Cập nhật trạng thái của tất cả workers
+    ['cutters', 'butterWorkers', 'vegetableWorkers', 'packers'].forEach(workerType => {
+        workers[workerType].forEach((worker, index) => {
+            if (worker.busy) {
+                worker.timeLeft--;
+                if (worker.timeLeft <= 0) {
+                    worker.busy = false;
+                    completeTask(workerType, index);
                 }
             }
+        });
+    });
+}
 
-            // Kiểm tra công đoạn quét bơ đã hoàn thành
-            if (stats.buttering.completed >= config.totalBreads) {
-                const availableButterWorkers = workers.butterWorkers.filter(w => !w.busy).length;
-                if (availableButterWorkers > 0) {
-                    // Chuyển toàn bộ sang bỏ rau
-                    config.vegetableWorkers += availableButterWorkers;
-                    config.butterWorkers -= availableButterWorkers;
+function checkAndMoveWorkers() {
+    // Kiểm tra và di chuyển workers khi công đoạn hoàn thành
+    
+    // Kiểm tra công đoạn cắt bánh đã hoàn thành
+    if (stats.cutting.completed >= config.totalBreads) {
+        const availableCutters = workers.cutters.filter(w => !w.busy);
+        if (availableCutters.length > 0) {
+            const halfToButtering = Math.floor(availableCutters.length / 2);
+            const halfToVegetables = availableCutters.length - halfToButtering;
 
-                    workers.vegetableWorkers.push(...Array(availableButterWorkers).fill().map(() => ({ busy: false, timeLeft: 0 })));
-                    workers.butterWorkers = workers.butterWorkers.filter(w => w.busy);
-
-                    console.log(`Đã chuyển ${availableButterWorkers} người từ quét bơ sang bỏ rau`);
-                }
+            // Chuyển worker sang butter và vegetable
+            for (let i = 0; i < halfToButtering; i++) {
+                workers.butterWorkers.push({ busy: false, timeLeft: 0 });
+                config.butterWorkers++;
             }
-
-            // Kiểm tra công đoạn bỏ rau đã hoàn thành
-            if (stats.vegetables.completed >= config.totalBreads) {
-                const availableVegWorkers = workers.vegetableWorkers.filter(w => !w.busy).length;
-                if (availableVegWorkers > 0) {
-                    // Chuyển toàn bộ sang đóng gói
-                    config.packWorkers += availableVegWorkers;
-                    config.vegetableWorkers -= availableVegWorkers;
-
-                    workers.packers.push(...Array(availableVegWorkers).fill().map(() => ({ busy: false, timeLeft: 0 })));
-                    workers.vegetableWorkers = workers.vegetableWorkers.filter(w => w.busy);
-
-                    console.log(`Đã chuyển ${availableVegWorkers} người từ bỏ rau sang đóng gói`);
-                }
-            }
-
-            // Cập nhật giao diện sau khi di chuyển
-            initializeWorkerDisplays();
-            updateUI();
-        }
-
-        function completeTask(workerType, workerIndex) {
-            switch (workerType) {
-                case 'cutters':
-                    stats.cutting.completed++;
-                    stats.cutting.inProgress--;
-                    queues.afterCut.push({ id: Date.now() + Math.random() });
-                    break;
-                case 'butterWorkers':
-                    stats.buttering.completed++;
-                    stats.buttering.inProgress--;
-                    queues.afterButter.push({ id: Date.now() + Math.random() });
-                    break;
-                case 'vegetableWorkers':
-                    stats.vegetables.completed++;
-                    stats.vegetables.inProgress--;
-                    queues.afterVegetables.push({ id: Date.now() + Math.random() });
-                    break;
-                case 'packers':
-                    stats.packing.completed++;
-                    stats.packing.inProgress--;
-                    stats.completed++;
-                    break;
-            }
-        }
-
-        function startNewTasks() {
-            // Start cutting
-            if (stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
-                workers.cutters.forEach(worker => {
-                    if (!worker.busy && stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
-                        worker.busy = true;
-                        worker.timeLeft = config.cutTime;
-                        stats.cutting.inProgress++;
-                    }
-                });
-            }
-
-            // Start buttering
-            if (queues.afterCut.length > 0) {
-                workers.butterWorkers.forEach(worker => {
-                    if (!worker.busy && queues.afterCut.length > 0) {
-                        worker.busy = true;
-                        worker.timeLeft = config.butterTime;
-                        queues.afterCut.shift();
-                        stats.buttering.inProgress++;
-                    }
-                });
-            }
-
-            // Start vegetables
-            if (queues.afterButter.length > 0) {
-                workers.vegetableWorkers.forEach(worker => {
-                    if (!worker.busy && queues.afterButter.length > 0) {
-                        worker.busy = true;
-                        worker.timeLeft = config.vegetableTime;
-                        queues.afterButter.shift();
-                        stats.vegetables.inProgress++;
-                    }
-                });
-            }
-
-            // Start packing
-            if (queues.afterVegetables.length > 0) {
-                workers.packers.forEach(worker => {
-                    if (!worker.busy && queues.afterVegetables.length > 0) {
-                        worker.busy = true;
-                        worker.timeLeft = config.packTime;
-                        queues.afterVegetables.shift();
-                        stats.packing.inProgress++;
-                    }
-                });
-            }
-        }
-
-        function calculateETA() {
-            if (stats.completed >= config.totalBreads) return '00:00:00';
             
-            const remainingItems = config.totalBreads - stats.completed;
-            
-            // Tính tốc độ dựa trên số người
-            const cutRate = config.cutWorkers / config.cutTime;
-            const butterRate = config.butterWorkers / config.butterTime;
-            const vegetableRate = config.vegetableWorkers / config.vegetableTime;
-            const packRate = config.packWorkers / config.packTime;
-            
-            // Tìm công đoạn chậm nhất (bottleneck)
-            const bottleneckRate = Math.min(cutRate, butterRate, vegetableRate, packRate);
-            
-            // Tính thời gian còn lại (giây)
-            const remainingSeconds = Math.ceil(remainingItems / bottleneckRate);
-            
-            return formatTime(remainingSeconds);
+            for (let i = 0; i < halfToVegetables; i++) {
+                workers.vegetableWorkers.push({ busy: false, timeLeft: 0 });
+                config.vegetableWorkers++;
+            }
+
+            // Loại bỏ workers đã chuyển
+            workers.cutters = workers.cutters.filter(w => w.busy);
+            config.cutWorkers = workers.cutters.length;
         }
+    }
 
-        function formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    // Kiểm tra công đoạn quét bơ đã hoàn thành
+    if (stats.buttering.completed >= config.totalBreads) {
+        const availableButterWorkers = workers.butterWorkers.filter(w => !w.busy);
+        if (availableButterWorkers.length > 0) {
+            // Chuyển toàn bộ sang bỏ rau
+            for (let i = 0; i < availableButterWorkers.length; i++) {
+                workers.vegetableWorkers.push({ busy: false, timeLeft: 0 });
+                config.vegetableWorkers++;
+            }
+
+            workers.butterWorkers = workers.butterWorkers.filter(w => w.busy);
+            config.butterWorkers = workers.butterWorkers.length;
         }
+    }
 
-        function initializeWorkerDisplays() {
-            // Cutter workers
-            const cutterContainer = document.getElementById('cutterWorkers');
-            cutterContainer.innerHTML = '';
-            workers.cutters.forEach((worker, index) => {
-                const workerDiv = document.createElement('div');
-                workerDiv.className = 'worker-status worker-free';
-                workerDiv.id = `cutter-${index}`;
-                workerDiv.textContent = 'Rảnh';
-                cutterContainer.appendChild(workerDiv);
-            });
+    // Kiểm tra công đoạn bỏ rau đã hoàn thành
+    if (stats.vegetables.completed >= config.totalBreads) {
+        const availableVegWorkers = workers.vegetableWorkers.filter(w => !w.busy);
+        if (availableVegWorkers.length > 0) {
+            // Chuyển toàn bộ sang đóng gói
+            for (let i = 0; i < availableVegWorkers.length; i++) {
+                workers.packers.push({ busy: false, timeLeft: 0 });
+                config.packWorkers++;
+            }
 
-            // Packer workers
-            const packerContainer = document.getElementById('packerWorkers');
-            packerContainer.innerHTML = '';
-            workers.packers.forEach((worker, index) => {
-                const workerDiv = document.createElement('div');
-                workerDiv.className = 'worker-status worker-free';
-                workerDiv.id = `packer-${index}`;
-                workerDiv.textContent = 'Rảnh';
-                packerContainer.appendChild(workerDiv);
-            });
+            workers.vegetableWorkers = workers.vegetableWorkers.filter(w => w.busy);
+            config.vegetableWorkers = workers.vegetableWorkers.length;
+        }
+    }
+}
 
-            // Parallel lines (butter & vegetable)
-            const parallelContainer = document.getElementById('parallelLines');
-            parallelContainer.innerHTML = '';
-            const maxLines = Math.max(workers.butterWorkers.length, workers.vegetableWorkers.length, 4);
-            for (let i = 0; i < maxLines; i++) {
-                const butterStatus = workers.butterWorkers[i]
-                    ? `<div class="station-status worker-free" id="butter-${i}">Rảnh</div>`
-                    : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
-                const vegStatus = workers.vegetableWorkers[i]
-                    ? `<div class="station-status worker-free" id="vegetable-${i}">Rảnh</div>`
-                    : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
-                const lineDiv = document.createElement('div');
-                lineDiv.className = 'line-container';
-                lineDiv.innerHTML = `
-                    <div class="line-title">Dây chuyền ${i + 1}</div>
-                    <div class="line-station border-yellow-500">
-                        <div class="station-name">Quét bơ</div>
-                        ${butterStatus}
-                    </div>
-                    <div style="text-align: center; font-size: 0.875rem; margin: 0.5rem 0;">↓</div>
-                    <div class="line-station border-green-500">
-                        <div class="station-name">Bỏ rau</div>
-                        ${vegStatus}
-                    </div>
-                `;
-                parallelContainer.appendChild(lineDiv);
+function completeTask(workerType, workerIndex) {
+    switch (workerType) {
+        case 'cutters':
+            stats.cutting.completed++;
+            stats.cutting.inProgress = Math.max(0, stats.cutting.inProgress - 1);
+            queues.afterCut.push({ id: Date.now() + Math.random() });
+            break;
+        case 'butterWorkers':
+            stats.buttering.completed++;
+            stats.buttering.inProgress = Math.max(0, stats.buttering.inProgress - 1);
+            queues.afterButter.push({ id: Date.now() + Math.random() });
+            break;
+        case 'vegetableWorkers':
+            stats.vegetables.completed++;
+            stats.vegetables.inProgress = Math.max(0, stats.vegetables.inProgress - 1);
+            queues.afterVegetables.push({ id: Date.now() + Math.random() });
+            break;
+        case 'packers':
+            stats.packing.completed++;
+            stats.packing.inProgress = Math.max(0, stats.packing.inProgress - 1);
+            stats.completed++;
+            break;
+    }
+}
+
+function startNewTasks() {
+    // Bắt đầu công việc cắt bánh
+    if (stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
+        workers.cutters.forEach(worker => {
+            if (!worker.busy && stats.cutting.completed + stats.cutting.inProgress < config.totalBreads) {
+                worker.busy = true;
+                worker.timeLeft = config.cutTime;
+                stats.cutting.inProgress++;
+            }
+        });
+    }
+    
+    // Bắt đầu công việc quét bơ
+    if (queues.afterCut.length > 0) {
+        workers.butterWorkers.forEach(worker => {
+            if (!worker.busy && queues.afterCut.length > 0) {
+                worker.busy = true;
+                worker.timeLeft = config.butterTime;
+                queues.afterCut.shift();
+                stats.buttering.inProgress++;
+            }
+        });
+    }
+
+    // Bắt đầu công việc bỏ rau
+    if (queues.afterButter.length > 0) {
+        workers.vegetableWorkers.forEach(worker => {
+            if (!worker.busy && queues.afterButter.length > 0) {
+                worker.busy = true;
+                worker.timeLeft = config.vegetableTime;
+                queues.afterButter.shift();
+                stats.vegetables.inProgress++;
+            }
+        });
+    }
+
+    // Bắt đầu công việc đóng gói
+    if (queues.afterVegetables.length > 0) {
+        workers.packers.forEach(worker => {
+            if (!worker.busy && queues.afterVegetables.length > 0) {
+                worker.busy = true;
+                worker.timeLeft = config.packTime;
+                queues.afterVegetables.shift();
+                stats.packing.inProgress++;
+            }
+        });
+    }
+}
+
+function calculateETA() {
+    if (stats.completed >= config.totalBreads) return '00:00:00';
+    
+    const remainingItems = config.totalBreads - stats.completed;
+    const completedItems = stats.completed;
+    
+    if (completedItems === 0 || currentTime === 0) {
+        // Tính toán dựa trên thông số cấu hình
+        const cutRate = config.cutWorkers / config.cutTime;
+        const butterRate = config.butterWorkers / config.butterTime;
+        const vegetableRate = config.vegetableWorkers / config.vegetableTime;
+        const packRate = config.packWorkers / config.packTime;
+        const bottleneckRate = Math.min(cutRate, butterRate, vegetableRate, packRate);
+        
+        if (bottleneckRate > 0) {
+            return formatTime(Math.ceil(remainingItems / bottleneckRate));
+        }
+        return '∞';
+    } else {
+        // Tính toán dựa trên tốc độ thực tế
+        const currentRate = completedItems / currentTime;
+        if (currentRate > 0) {
+            return formatTime(Math.ceil(remainingItems / currentRate));
+        }
+        return '∞';
+    }
+}
+
+function formatTime(seconds) {
+    if (!isFinite(seconds) || seconds < 0) return '∞';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function initializeWorkerDisplays() {
+    // Cutter workers
+    const cutterContainer = document.getElementById('cutterWorkers');
+    if (cutterContainer) {
+        cutterContainer.innerHTML = '';
+        workers.cutters.forEach((worker, index) => {
+            const workerDiv = document.createElement('div');
+            workerDiv.className = 'worker-status worker-free';
+            workerDiv.id = `cutter-${index}`;
+            workerDiv.textContent = 'Rảnh';
+            cutterContainer.appendChild(workerDiv);
+        });
+    }
+
+    // Packer workers
+    const packerContainer = document.getElementById('packerWorkers');
+    if (packerContainer) {
+        packerContainer.innerHTML = '';
+        workers.packers.forEach((worker, index) => {
+            const workerDiv = document.createElement('div');
+            workerDiv.className = 'worker-status worker-free';
+            workerDiv.id = `packer-${index}`;
+            workerDiv.textContent = 'Rảnh';
+            packerContainer.appendChild(workerDiv);
+        });
+    }
+
+    // Parallel lines (butter & vegetable)
+    const parallelContainer = document.getElementById('parallelLines');
+    if (parallelContainer) {
+        parallelContainer.innerHTML = '';
+        const maxLines = Math.max(workers.butterWorkers.length, workers.vegetableWorkers.length, 4);
+        for (let i = 0; i < maxLines; i++) {
+            const butterStatus = workers.butterWorkers[i]
+                ? `<div class="station-status worker-free" id="butter-${i}">Rảnh</div>`
+                : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
+            const vegStatus = workers.vegetableWorkers[i]
+                ? `<div class="station-status worker-free" id="vegetable-${i}">Rảnh</div>`
+                : `<div class="station-status" style="background:#f3f4f6;color:#bbb;">Không có người</div>`;
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line-container';
+            lineDiv.innerHTML = `
+                <div class="line-title">Dây chuyền ${i + 1}</div>
+                <div class="line-station border-yellow-500">
+                    <div class="station-name">Quét bơ</div>
+                    ${butterStatus}
+                </div>
+                <div style="text-align: center; font-size: 0.875rem; margin: 0.5rem 0;">↓</div>
+                <div class="line-station border-green-500">
+                    <div class="station-name">Bỏ rau</div>
+                    ${vegStatus}
+                </div>
+            `;
+            parallelContainer.appendChild(lineDiv);
+        }
+    }
+}
+
+function updateUI() {
+    // Update time
+    const timeElement = document.getElementById('currentTime');
+    if (timeElement) timeElement.textContent = formatTime(currentTime);
+
+    // Update ETA
+    const etaElement = document.getElementById('etaTime');
+    if (etaElement) etaElement.textContent = calculateETA();
+
+    // Update config displays
+    const cutTimeDisplay = document.getElementById('cutTimeDisplay');
+    if (cutTimeDisplay) cutTimeDisplay.textContent = config.cutTime;
+    
+    const packTimeDisplay = document.getElementById('packTimeDisplay');
+    if (packTimeDisplay) packTimeDisplay.textContent = config.packTime;
+    
+    const totalCount = document.getElementById('totalCount');
+    if (totalCount) totalCount.textContent = config.totalBreads;
+
+    // Update progress
+    const completionPercentage = (stats.completed / config.totalBreads * 100);
+    const completedCount = document.getElementById('completedCount');
+    if (completedCount) completedCount.textContent = stats.completed;
+    
+    const completionPercentageElement = document.getElementById('completionPercentage');
+    if (completionPercentageElement) completionPercentageElement.textContent = completionPercentage.toFixed(1) + '%';
+    
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) progressFill.style.width = completionPercentage + '%';
+
+    // Update stats
+    const cutCompleted = document.getElementById('cutCompleted');
+    if (cutCompleted) cutCompleted.textContent = stats.cutting.completed;
+    
+    const butterCompleted = document.getElementById('butterCompleted');
+    if (butterCompleted) butterCompleted.textContent = stats.buttering.completed;
+    
+    const vegetableCompleted = document.getElementById('vegetableCompleted');
+    if (vegetableCompleted) vegetableCompleted.textContent = stats.vegetables.completed;
+    
+    const packCompleted = document.getElementById('packCompleted');
+    if (packCompleted) packCompleted.textContent = stats.packing.completed;
+    
+    const finalCompleted = document.getElementById('finalCompleted');
+    if (finalCompleted) finalCompleted.textContent = stats.completed;
+
+    // Update queues
+    const afterCutQueue = document.getElementById('afterCutQueue');
+    if (afterCutQueue) afterCutQueue.textContent = queues.afterCut.length;
+    
+    const afterVegetableQueue = document.getElementById('afterVegetableQueue');
+    if (afterVegetableQueue) afterVegetableQueue.textContent = queues.afterVegetables.length;
+
+    // Update worker statuses
+    updateWorkerStatus('cutter', workers.cutters);
+    updateWorkerStatus('packer', workers.packers);
+    updateWorkerStatus('butter', workers.butterWorkers);
+    updateWorkerStatus('vegetable', workers.vegetableWorkers);
+
+    // Update statistics table
+    updateStatisticsTable();
+}
+
+function updateWorkerStatus(prefix, workerList) {
+    workerList.forEach((worker, index) => {
+        const element = document.getElementById(`${prefix}-${index}`);
+        if (element) {
+            if (worker.busy) {
+                element.className = 'worker-status worker-busy';
+                element.textContent = `Bận (${worker.timeLeft}s)`;
+            } else {
+                element.className = 'worker-status worker-free';
+                element.textContent = 'Rảnh';
             }
         }
+    });
+}
 
-        function updateUI() {
-            // Update time
-            document.getElementById('currentTime').textContent = formatTime(currentTime);
+function updateStatisticsTable() {
+    // Update table values
+    const cutTimeTable = document.getElementById('cutTimeTable');
+    if (cutTimeTable) cutTimeTable.textContent = config.cutTime;
+    
+    const butterTimeTable = document.getElementById('butterTimeTable');
+    if (butterTimeTable) butterTimeTable.textContent = config.butterTime;
+    
+    const vegetableTimeTable = document.getElementById('vegetableTimeTable');
+    if (vegetableTimeTable) vegetableTimeTable.textContent = config.vegetableTime;
+    
+    const packTimeTable = document.getElementById('packTimeTable');
+    if (packTimeTable) packTimeTable.textContent = config.packTime;
 
-            // Update ETA
-            document.getElementById('etaTime').textContent = calculateETA();
+    const cutCompletedTable = document.getElementById('cutCompletedTable');
+    if (cutCompletedTable) cutCompletedTable.textContent = stats.cutting.completed;
+    
+    const butterCompletedTable = document.getElementById('butterCompletedTable');
+    if (butterCompletedTable) butterCompletedTable.textContent = stats.buttering.completed;
+    
+    const vegetableCompletedTable = document.getElementById('vegetableCompletedTable');
+    if (vegetableCompletedTable) vegetableCompletedTable.textContent = stats.vegetables.completed;
+    
+    const packCompletedTable = document.getElementById('packCompletedTable');
+    if (packCompletedTable) packCompletedTable.textContent = stats.packing.completed;
 
-            // Update config displays
-            document.getElementById('cutTimeDisplay').textContent = config.cutTime;
-            document.getElementById('packTimeDisplay').textContent = config.packTime;
-            document.getElementById('totalCount').textContent = config.totalBreads;
+    const cutInProgressTable = document.getElementById('cutInProgressTable');
+    if (cutInProgressTable) cutInProgressTable.textContent = stats.cutting.inProgress;
+    
+    const butterInProgressTable = document.getElementById('butterInProgressTable');
+    if (butterInProgressTable) butterInProgressTable.textContent = stats.buttering.inProgress;
+    
+    const vegetableInProgressTable = document.getElementById('vegetableInProgressTable');
+    if (vegetableInProgressTable) vegetableInProgressTable.textContent = stats.vegetables.inProgress;
+    
+    const packInProgressTable = document.getElementById('packInProgressTable');
+    if (packInProgressTable) packInProgressTable.textContent = stats.packing.inProgress;
 
-            // Update progress
-            const completionPercentage = (stats.completed / config.totalBreads * 100).toFixed(1);
-            document.getElementById('completedCount').textContent = stats.completed;
-            document.getElementById('completionPercentage').textContent = completionPercentage + '%';
-            document.getElementById('progressFill').style.width = completionPercentage + '%';
+    const cutWorkersCount = document.getElementById('cutWorkersCount');
+    if (cutWorkersCount) cutWorkersCount.textContent = config.cutWorkers;
+    
+    const butterWorkersCount = document.getElementById('butterWorkersCount');
+    if (butterWorkersCount) butterWorkersCount.textContent = config.butterWorkers;
+    
+    const vegetableWorkersCount = document.getElementById('vegetableWorkersCount');
+    if (vegetableWorkersCount) vegetableWorkersCount.textContent = config.vegetableWorkers;
+    
+    const packWorkersCount = document.getElementById('packWorkersCount');
+    if (packWorkersCount) packWorkersCount.textContent = config.packWorkers;
 
-            // Update stats
-            document.getElementById('cutCompleted').textContent = stats.cutting.completed;
-            document.getElementById('butterCompleted').textContent = stats.buttering.completed;
-            document.getElementById('vegetableCompleted').textContent = stats.vegetables.completed;
-            document.getElementById('packCompleted').textContent = stats.packing.completed;
-            document.getElementById('finalCompleted').textContent = stats.completed;
+    // Tính hiệu suất (bánh/phút)
+    const cutEfficiency = config.cutWorkers > 0 ? (config.cutWorkers * 60 / config.cutTime).toFixed(1) : '0';
+    const butterEfficiency = config.butterWorkers > 0 ? (config.butterWorkers * 60 / config.butterTime).toFixed(1) : '0';
+    const vegetableEfficiency = config.vegetableWorkers > 0 ? (config.vegetableWorkers * 60 / config.vegetableTime).toFixed(1) : '0';
+    const packEfficiency = config.packWorkers > 0 ? (config.packWorkers * 60 / config.packTime).toFixed(1) : '0';
 
-            // Update queues
-            document.getElementById('afterCutQueue').textContent = queues.afterCut.length;
-            document.getElementById('afterVegetableQueue').textContent = queues.afterVegetables.length;
+    const cutEfficiencyTable = document.getElementById('cutEfficiencyTable');
+    if (cutEfficiencyTable) cutEfficiencyTable.textContent = cutEfficiency + ' bánh/phút';
+    
+    const butterEfficiencyTable = document.getElementById('butterEfficiencyTable');
+    if (butterEfficiencyTable) butterEfficiencyTable.textContent = butterEfficiency + ' bánh/phút';
+    
+    const vegetableEfficiencyTable = document.getElementById('vegetableEfficiencyTable');
+    if (vegetableEfficiencyTable) vegetableEfficiencyTable.textContent = vegetableEfficiency + ' bánh/phút';
+    
+    const packEfficiencyTable = document.getElementById('packEfficiencyTable');
+    if (packEfficiencyTable) packEfficiencyTable.textContent = packEfficiency + ' bánh/phút';
+}
 
-            // Update worker statuses
-            updateWorkerStatus('cutter', workers.cutters);
-            updateWorkerStatus('packer', workers.packers);
-            updateWorkerStatus('butter', workers.butterWorkers);
-            updateWorkerStatus('vegetable', workers.vegetableWorkers);
-
-            // Update statistics table
-            updateStatisticsTable();
-
-            // Tự động dừng khi hoàn thành
-            if (stats.completed >= config.totalBreads && isRunning) {
-                toggleSimulation();
-            }
-        }
-
-        function updateWorkerStatus(prefix, workerList) {
-            workerList.forEach((worker, index) => {
-                const element = document.getElementById(`${prefix}-${index}`);
-                if (element) {
-                    if (worker.busy) {
-                        element.className = 'worker-status worker-busy';
-                        element.textContent = `Bận (${worker.timeLeft}s)`;
-                    } else {
-                        element.className = 'worker-status worker-free';
-                        element.textContent = 'Rảnh';
-                    }
-                }
-            });
-        }
-
-        function updateStatisticsTable() {
-            // Update table values
-            document.getElementById('cutTimeTable').textContent = config.cutTime;
-            document.getElementById('butterTimeTable').textContent = config.butterTime;
-            document.getElementById('vegetableTimeTable').textContent = config.vegetableTime;
-            document.getElementById('packTimeTable').textContent = config.packTime;
-
-            document.getElementById('cutCompletedTable').textContent = stats.cutting.completed;
-            document.getElementById('butterCompletedTable').textContent = stats.buttering.completed;
-            document.getElementById('vegetableCompletedTable').textContent = stats.vegetables.completed;
-            document.getElementById('packCompletedTable').textContent = stats.packing.completed;
-
-            document.getElementById('cutInProgressTable').textContent = stats.cutting.inProgress;
-            document.getElementById('butterInProgressTable').textContent = stats.buttering.inProgress;
-            document.getElementById('vegetableInProgressTable').textContent = stats.vegetables.inProgress;
-            document.getElementById('packInProgressTable').textContent = stats.packing.inProgress;
-
-            document.getElementById('cutWorkersCount').textContent = config.cutWorkers;
-            document.getElementById('butterWorkersCount').textContent = config.butterWorkers;
-            document.getElementById('vegetableWorkersCount').textContent = config.vegetableWorkers;
-            document.getElementById('packWorkersCount').textContent = config.packWorkers;
-
-            // Tính hiệu suất thực tế (bánh/phút) dựa trên công thức:
-            // Hiệu suất = (Số người × 60) ÷ Thời gian hoàn thành 1 bánh
-            const cutEfficiency = (config.cutWorkers * 60 / config.cutTime).toFixed(1);
-            const butterEfficiency = (config.butterWorkers * 60 / config.butterTime).toFixed(1);
-            const vegetableEfficiency = (config.vegetableWorkers * 60 / config.vegetableTime).toFixed(1);
-            const packEfficiency = (config.packWorkers * 60 / config.packTime).toFixed(1);
-
-            // Thêm logic để tính hiệu suất thực tế khi di chuyển người
-            const actualCutEfficiency = stats.cutting.completed > 0 ? 
-                Math.min(cutEfficiency, (stats.cutting.completed / (currentTime / 60)).toFixed(1)) : 
-                cutEfficiency;
-
-            const actualButterEfficiency = stats.buttering.completed > 0 ? 
-                Math.min(butterEfficiency, (stats.buttering.completed / (currentTime / 60)).toFixed(1)) : 
-                butterEfficiency;
-
-            const actualVegetableEfficiency = stats.vegetables.completed > 0 ? 
-                Math.min(vegetableEfficiency, (stats.vegetables.completed / (currentTime / 60)).toFixed(1)) : 
-                vegetableEfficiency;
-
-            const actualPackEfficiency = stats.packing.completed > 0 ? 
-                Math.min(packEfficiency, (stats.packing.completed / (currentTime / 60)).toFixed(1)) : 
-                packEfficiency;
-
-            // Cập nhật hiển thị
-            document.getElementById('cutEfficiencyTable').textContent = actualCutEfficiency + ' bánh/phút';
-            document.getElementById('butterEfficiencyTable').textContent = actualButterEfficiency + ' bánh/phút';
-            document.getElementById('vegetableEfficiencyTable').textContent = actualVegetableEfficiency + ' bánh/phút';
-            document.getElementById('packEfficiencyTable').textContent = actualPackEfficiency + ' bánh/phút';
-        }
-
-        // Initialize the application when the page loads
-        document.addEventListener('DOMContentLoaded', init);
+// Initialize the application when the page loads
+document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-`
